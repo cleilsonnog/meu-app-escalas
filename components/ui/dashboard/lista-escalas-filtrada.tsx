@@ -235,8 +235,8 @@ export function ListaEscalasFiltrada({ escalas }: Props) {
       </div>
 
       {/* Barra de Filtros e Busca */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="flex-1 min-w-[200px]">
+      <div className="flex flex-col items-stretch gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4 md:flex-row md:items-center md:justify-between">
+        <div className="w-full flex-1">
           <input
             type="text"
             value={busca}
@@ -246,12 +246,12 @@ export function ListaEscalasFiltrada({ escalas }: Props) {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto">
           {/* Select por Culto / Evento */}
           <select
             value={eventoFiltro}
             onChange={(e) => setEventoFiltro(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 sm:w-auto"
           >
             <option value="TODOS">Todos os Cultos</option>
             {listaEventos.map((evt) => (
@@ -265,7 +265,7 @@ export function ListaEscalasFiltrada({ escalas }: Props) {
           <select
             value={statusFiltro}
             onChange={(e) => setStatusFiltro(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 sm:w-auto"
           >
             <option value="TODOS">Todos os Status</option>
             <option value="PENDENTE">Apenas Pendentes</option>
@@ -282,7 +282,7 @@ export function ListaEscalasFiltrada({ escalas }: Props) {
                 setEventoFiltro("TODOS");
                 setBusca("");
               }}
-              className="px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline"
+              className="px-3 py-2 text-left text-xs font-medium text-slate-500 underline hover:text-slate-800 dark:hover:text-slate-200 sm:text-center"
             >
               Limpar filtros
             </button>

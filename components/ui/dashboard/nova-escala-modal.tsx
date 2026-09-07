@@ -49,11 +49,15 @@ export function NovaEscalaModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nova Escala
-        </Button>
+      <DialogTrigger
+        render={
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nova Escala
+          </Button>
+        }
+      >
+        Nova Escala
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

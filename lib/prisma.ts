@@ -1,5 +1,3 @@
-// O cliente é gerado pelo Prisma durante a instalação/build.
-// @ts-expect-error O TypeScript pode não encontrar as declarações antes da geração.
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";

@@ -23,24 +23,26 @@ export default async function DashboardPage() {
   const listaVoluntarios = voluntarios || [];
 
   return (
-    <div className="flex flex-col min-h-screen p-8 bg-slate-50 dark:bg-slate-950">
-      <header className="flex items-center justify-between mb-8 pb-4 border-b">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+    <div className="min-h-screen bg-slate-50 px-3 py-4 dark:bg-slate-950 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <header className="mb-6 flex flex-col gap-4 border-b pb-5 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             Painel de Escalas
           </h1>
-          <p className="text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Gerencie as funções e voluntários dos próximos cultos.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <NovoVoluntarioModal />
           <NovaEscalaModal voluntarios={listaVoluntarios} />
-          <UserButton afterSignOutUrl="/" />
+          <div className="ml-auto sm:ml-1">
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </div>
       </header>
 
-      <main>
+      <main className="mx-auto w-full max-w-7xl">
         <ListaEscalasFiltrada escalas={listaEscalas} />
         <h2 className="text-xl font-semibold mb-4">Escalas Agendadas</h2>
 

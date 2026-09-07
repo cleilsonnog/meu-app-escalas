@@ -17,10 +17,10 @@ export function DashboardTabs({ escalas, voluntarios }: Props) {
   return (
     <div className="space-y-6">
       {/* Seletor de Abas */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex gap-2 overflow-x-auto border-b border-slate-200 pb-2 dark:border-slate-800">
         <button
           onClick={() => setAbaAtiva("escalas")}
-          className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${
+          className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-4 ${
             abaAtiva === "escalas"
               ? "bg-indigo-600 text-white shadow-sm"
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -31,7 +31,7 @@ export function DashboardTabs({ escalas, voluntarios }: Props) {
 
         <button
           onClick={() => setAbaAtiva("voluntarios")}
-          className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${
+          className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-4 ${
             abaAtiva === "voluntarios"
               ? "bg-indigo-600 text-white shadow-sm"
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"

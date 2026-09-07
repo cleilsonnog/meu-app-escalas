@@ -56,20 +56,20 @@ export function EscalaCard({
         : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border-amber-300";
 
   return (
-    <div className="flex flex-col justify-between p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition">
+    <div className="flex min-w-0 flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:p-5">
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <span
             className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${badgeColor}`}
           >
             {status}
           </span>
-          <span className="text-xs text-muted-foreground capitalize">
+          <span className="text-right text-xs text-muted-foreground capitalize">
             {dataFormatada}
           </span>
         </div>
 
-        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
+        <h3 className="mb-1 break-words text-lg font-bold text-slate-900 dark:text-slate-100">
           {nome}
         </h3>
         <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-1">
@@ -83,12 +83,12 @@ export function EscalaCard({
         </p>
       </div>
 
-      <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
         <span className="text-xs text-slate-400">{telefone}</span>
 
         <button
           onClick={enviarNotificacaoWhatsApp}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg border border-emerald-200 dark:border-emerald-800 transition"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
         >
           📲 Avisar no Whats
         </button>
