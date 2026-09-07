@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { EscalaCard } from "@/components/ui/dashboard/escala-card";
 import { NovaEscalaModal } from "@/components/ui/dashboard/nova-escala-modal";
 import { NovoVoluntarioModal } from "@/components/ui/dashboard/novo-voluntario-modal";
+import { DashboardTabs } from "@/components/ui/dashboard/dashboard-tabs";
 import { ListaEscalasFiltrada } from "@/components/ui/dashboard/lista-escalas-filtrada";
 import { getEscalas, getVoluntarios } from "@/app/actions/escalas";
 
