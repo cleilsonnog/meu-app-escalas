@@ -1,0 +1,69 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Supondo que você use PostgreSQL (como Supabase, Neon ou local)
+datasource db {
+  provider = "postgresql"
+}
+
+// Enum para o status da escala
+enum StatusEscala {
+  PENDENTE
+  CONFIRMADO
+  RECUSADO
+}
+
+// Tabela de Voluntários / Membros
+model Volunteer {
+  id          String     @id @default(uuid())
+  clerkUserId String?    @unique // Para vincular ao login do Clerk, se necessário
+  nome        String
+  telefone    String     // Essencial para o alerta no WhatsApp
+  departamento String    // ex: Louvor, Mídia, Recepção
+  ativo       Boolean    @default(true)
+  
+  // Relacionamento: Um voluntário pode ter várias escalas
+  escalas     Schedule[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Tabela de Cultos / Eventos
+model Event {
+  id          String     @id @default(uuid())
+  titulo      String     // ex: Culto de Domingo, Culto de Jovens
+  dataHora    DateTime
+  descricao   String?
+
+  // Relacionamento: Um evento tem várias pessoas escaladas
+  escalas     Schedule[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Tabela de Escalas (A tabela pivô que une Voluntário e Evento)
+model Schedule {
+  id          String       @id @default(uuid())
+  
+  // Chaves estrangeiras
+  volunteerId String
+  eventId     String
+
+  // Relacionamentos
+  volunteer   Volunteer    @relation(fields: [volunteerId], references: [id])
+  event       Event        @relation(fields: [eventId], references: [id])
+
+  funcaoEspecífica String  // ex: Baterista, Câmera 1, Porta Principal
+  status      StatusEscala @default(PENDENTE)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Garante que a mesma pessoa não seja escalada duas vezes na mesma função no mesmo culto
+  @@unique([volunteerId, eventId, funcaoEspecífica])
+}
