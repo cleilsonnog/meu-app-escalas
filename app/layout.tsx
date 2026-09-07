@@ -5,7 +5,6 @@ import type { Viewport } from "next";
 import { PwaRegister } from "./pwa-register";
 import "./globals.css";
 
-
 export const metadata = {
   title: "Escala Igreja Pro",
   description: "Gerenciamento inteligente de escalas e voluntários",
