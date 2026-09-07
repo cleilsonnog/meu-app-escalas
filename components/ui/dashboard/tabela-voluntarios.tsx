@@ -73,8 +73,8 @@ export function TabelaVoluntarios({ voluntarios }: Props) {
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <table className="w-full min-w-[620px] text-left text-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
+        <table className="w-full text-sm text-left min-w-[500px]">
           <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 font-semibold">
             <tr>
               <th className="p-4">Nome</th>

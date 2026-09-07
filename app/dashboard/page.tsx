@@ -23,56 +23,43 @@ export default async function DashboardPage() {
   const listaVoluntarios = voluntarios || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 px-3 py-4 dark:bg-slate-950 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-      <header className="mb-6 flex flex-col gap-4 border-b pb-5 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Painel de Escalas
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            Gerencie as funções e voluntários dos próximos cultos.
-          </p>
+    <div className="flex flex-col min-h-screen p-4 sm:p-8 bg-slate-50 dark:bg-slate-950">
+      <header className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+        {/* Linha 1 e 2: Título, Descrição e Avatar no Mobile */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              Painel de Gestão
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Gerencie cultos, escalas e voluntários do seu ministério.
+            </p>
+          </div>
+
+          {/* Avatar do Usuário (Mobile) */}
+          <div className="md:hidden shrink-0 pt-1">
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-          <NovoVoluntarioModal />
-          <NovaEscalaModal voluntarios={listaVoluntarios} />
-          <div className="ml-auto sm:ml-1">
+
+        {/* Linha 3: Botões de Ação ocupando 100% da largura no Mobile */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex-1 md:flex-initial">
+            <NovoVoluntarioModal />
+          </div>
+          <div className="flex-1 md:flex-initial">
+            <NovaEscalaModal voluntarios={listaVoluntarios} />
+          </div>
+
+          {/* Avatar do Usuário (Desktop) */}
+          <div className="hidden md:block shrink-0 ml-2">
             <UserButton afterSignOutUrl="/" />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl">
-        <ListaEscalasFiltrada escalas={listaEscalas} />
-        <h2 className="text-xl font-semibold mb-4">Escalas Agendadas</h2>
-
-        {listaEscalas.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            Nenhuma escala cadastrada ainda. Cadastre um voluntário e depois
-            clique em "Nova Escala".
-          </p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {listaEscalas.map((escala) => (
-              <EscalaCard
-                key={escala.id}
-                id={escala.id}
-                nome={escala.volunteer.nome}
-                telefone={escala.volunteer.telefone}
-                eventoTitulo={escala.event.titulo}
-                funcao={escala.funcaoEspecífica}
-                dataHora={escala.event.dataHora.toISOString()}
-                status={
-                  escala.status === "CONFIRMADO"
-                    ? "Confirmado"
-                    : escala.status === "RECUSADO"
-                      ? "Recusado"
-                      : "Pendente"
-                }
-              />
-            ))}
-          </div>
-        )}
+      <main>
+        <DashboardTabs escalas={listaEscalas} voluntarios={listaVoluntarios} />
       </main>
     </div>
   );

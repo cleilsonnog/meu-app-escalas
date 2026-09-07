@@ -29,14 +29,14 @@ export function NovoVoluntarioModal() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition"
+        className="w-full px-3 py-2.5 text-xs sm:text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition text-center whitespace-nowrap"
       >
         + Voluntário
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-lg p-6 shadow-xl border border-slate-200 dark:border-slate-800">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-lg p-6 shadow-xl border border-slate-200 dark:border-slate-800">
             <h3 className="text-lg font-bold mb-4">
               Cadastrar Novo Voluntário
             </h3>

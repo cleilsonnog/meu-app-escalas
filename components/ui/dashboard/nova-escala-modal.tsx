@@ -52,7 +52,7 @@ export function NovaEscalaModal({
       <DialogTrigger
         render={
           <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4 " />
             Nova Escala
           </Button>
         }
