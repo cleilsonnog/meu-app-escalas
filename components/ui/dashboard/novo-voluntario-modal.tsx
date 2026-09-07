@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createVoluntario } from "@/app/actions/voluntarios";
+import { UserPlus } from "lucide-react";
 
 export function NovoVoluntarioModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,10 +29,12 @@ export function NovoVoluntarioModal() {
   return (
     <>
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full px-3 py-2.5 text-xs sm:text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition text-center whitespace-nowrap"
+        className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition shadow-sm whitespace-nowrap"
       >
-        + Voluntário
+        <UserPlus className="h-4 w-4 shrink-0" />
+        <span>Novo Voluntário</span>
       </button>
 
       {isOpen && (
