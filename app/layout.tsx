@@ -10,6 +10,11 @@ export const metadata = {
   title: "Escala Igreja Pro",
   description: "Gerenciamento inteligente de escalas e voluntários",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
