@@ -39,6 +39,10 @@ export default async function ConfirmarEscalaPage({
     );
   }
 
+  // Acesso flexível para evitar erros de acentuação no TypeScript durante o build
+  const item = schedule as Record<string, any>;
+  const funcao = item.funcaoEspecífica || item.funcaoEspecifica || "Geral";
+
   return (
     <ConfirmarCliente
       scheduleId={schedule.id}
@@ -47,7 +51,7 @@ export default async function ConfirmarEscalaPage({
       eventoTitulo={schedule.event?.titulo || "Culto"}
       dataHora={schedule.event?.dataHora}
       nomeVoluntario={schedule.volunteer?.nome || "Voluntário"}
-      funcao={schedule.funcaoEspecifica || schedule.funcaoEspecífica || "Geral"}
+      funcao={funcao}
       departamento={schedule.volunteer?.departamento || "Geral"}
     />
   );

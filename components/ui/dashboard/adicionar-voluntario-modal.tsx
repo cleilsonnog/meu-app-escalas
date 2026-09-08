@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"; // Ou a sua biblioteca de Modal/Dialog
-import { adicionarVoluntarioAEscala } from "@/app/actions/escalas";
+import { adicionarVoluntarioAoEvento } from "@/app/actions/escalas";
 
 interface VoluntarioOption {
   id: string;
@@ -38,7 +38,7 @@ export function AdicionarVoluntarioModal({
     const formData = new FormData(event.currentTarget);
     formData.append("escalaId", escalaId);
 
-    const result = await adicionarVoluntarioAEscala(formData);
+    const result = await adicionarVoluntarioAoEvento(formData);
 
     setLoading(false);
     if (result.success) {
