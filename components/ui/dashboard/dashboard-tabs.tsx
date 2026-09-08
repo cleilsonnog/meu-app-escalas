@@ -43,7 +43,7 @@ export function DashboardTabs({ escalas, voluntarios }: Props) {
 
       {/* Conteúdo da Aba */}
       {abaAtiva === "escalas" ? (
-        <ListaEscalasFiltrada escalas={escalas} />
+        <ListaEscalasFiltrada escalas={escalas} voluntarios={voluntarios} />
       ) : (
         <TabelaVoluntarios voluntarios={voluntarios} />
       )}

@@ -57,6 +57,7 @@ export async function criarVoluntario(formData: FormData) {
       },
     });
 
+    revalidatePath("/");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
@@ -65,7 +66,7 @@ export async function criarVoluntario(formData: FormData) {
   }
 }
 
-// 4. Criar um novo evento com a pessoa escalada
+// 4. Criar um novo evento com a primeira pessoa escalada
 export async function criarEscala(formData: FormData) {
   const tituloEvento = formData.get("tituloEvento") as string;
   const dataHora = formData.get("dataHora") as string;
@@ -77,7 +78,7 @@ export async function criarEscala(formData: FormData) {
   }
 
   try {
-    // Cria ou reutiliza o evento e já associa a escala
+    // Cria o evento e já associa a primeira pessoa escalada
     const evento = await prisma.event.create({
       data: {
         titulo: tituloEvento,
@@ -94,7 +95,7 @@ export async function criarEscala(formData: FormData) {
       },
     });
 
-    // Atualiza o cache do Next.js para refletir os novos dados na tela imediatamente
+    revalidatePath("/");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
@@ -103,22 +104,89 @@ export async function criarEscala(formData: FormData) {
   }
 }
 
-// 5. Atualizar o status da escala (Confirmado ou Recusado)
+// 5. Adicionar um novo voluntário a um evento JÁ EXISTENTE
+export async function adicionarVoluntarioAoEvento(formData: FormData) {
+  const eventId = formData.get("eventId") as string;
+  const volunteerId = formData.get("volunteerId") as string;
+  const funcaoEspecifica = formData.get("funcaoEspecifica") as string;
+
+  if (!eventId || !volunteerId || !funcaoEspecifica) {
+    return { error: "Selecione o voluntário e preencha a função." };
+  }
+
+  try {
+    await prisma.schedule.create({
+      data: {
+        eventId: eventId,
+        volunteerId: volunteerId,
+        funcaoEspecífica: funcaoEspecifica,
+        status: "PENDENTE",
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao adicionar voluntário ao evento:", error);
+    return { error: "Não foi possível escalar o voluntário para este evento." };
+  }
+}
+
+// 6. Atualizar o status da escala (Confirmado ou Recusado)
 export async function responderEscala(
   id: string,
   novoStatus: "CONFIRMADO" | "RECUSADO",
+  observacao?: string,
 ) {
   try {
     await prisma.schedule.update({
       where: { id },
-      data: { status: novoStatus },
+      data: { status: novoStatus, observacao: observacao?.trim() || null },
     });
 
+    revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath(`/confirmar/${id}`);
     return { success: true };
   } catch (error) {
     console.error("Erro ao atualizar status da escala:", error);
     return { error: "Não foi possível atualizar o status da escala." };
+  }
+}
+// 7. Excluir uma pessoa específica da escala (Schedule)
+export async function excluirEscala(id: string) {
+  try {
+    await prisma.schedule.delete({
+      where: { id },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao excluir escala:", error);
+    return { error: "Erro ao remover voluntário da escala." };
+  }
+}
+
+// 8. Excluir o culto/evento completo e todas as pessoas vinculadas a ele
+export async function excluirEvento(eventId: string) {
+  try {
+    // Garante a remoção das escalas vinculadas primeiro
+    await prisma.schedule.deleteMany({
+      where: { eventId },
+    });
+
+    await prisma.event.delete({
+      where: { id: eventId },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao excluir evento:", error);
+    return { error: "Erro ao apagar o evento." };
   }
 }

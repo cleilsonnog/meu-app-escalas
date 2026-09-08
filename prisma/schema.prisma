@@ -59,6 +59,7 @@ model Schedule {
   event       Event        @relation(fields: [eventId], references: [id])
 
   funcaoEspecífica String  // ex: Baterista, Câmera 1, Porta Principal
+  observacao       String?     // Observações adicionais, se houver
   status      StatusEscala @default(PENDENTE)
 
   createdAt   DateTime     @default(now())
