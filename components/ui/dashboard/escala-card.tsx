@@ -21,6 +21,7 @@ export function EscalaCard({
 }: EscalaCardProps) {
   // Formata a data para um padrão amigável (Ex: Domingo, 15 de Outubro às 19:00)
   const dataFormatada = new Date(dataHora).toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
