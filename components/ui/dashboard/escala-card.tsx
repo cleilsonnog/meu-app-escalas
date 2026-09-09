@@ -20,8 +20,10 @@ interface ScheduleItem {
   status: "PENDENTE" | "CONFIRMADO" | "RECUSADO";
   funcaoEspecífica?: string;
   funcaoEspecifica?: string;
+  volunteerId?: string;
   observacao?: string;
   volunteer?: {
+    id?: string;
     nome?: string;
     telefone?: string;
   };
@@ -68,13 +70,27 @@ export function EscalaCard({
   // Notificar no WhatsApp
   function enviarNotificacaoWhatsApp(
     scheduleId: string,
+    volunteerId: string,
     nome: string,
     telefone: string,
     funcao: string,
   ) {
     const linkConfirmacao = `${window.location.origin}/confirmar/${scheduleId}`;
-    const telefoneLimpo = (telefone || "").replace(/\D/g, "");
+    const linkAgendaPessoal = volunteerId
+      ? `${window.location.origin}/voluntario/${volunteerId}`
+      : "";
+
+    let telefoneLimpo = (telefone || "").replace(/\D/g, "");
+
+    // Adiciona o DDI 55 do Brasil se o número tiver apenas DDD + Número (10 ou 11 dígitos)
+    if (telefoneLimpo.length >= 10 && telefoneLimpo.length <= 11) {
+      telefoneLimpo = `55${telefoneLimpo}`;
+    }
     const linhaIgreja = nomeIgreja ? `🏛️ *${nomeIgreja}*\n` : "";
+    // 👈 3. Linha adicional com a agenda do voluntário (se existir)
+    const linhaAgenda = linkAgendaPessoal
+      ? `\n\n📅 *Ver todas as suas escalas:* ${linkAgendaPessoal}`
+      : "";
 
     const mensagem =
       `${linhaIgreja}` +
@@ -85,6 +101,7 @@ export function EscalaCard({
       `🎸 *Função:* ${funcao}\n\n` +
       `Por favor, confirme sua presença ou avise se não poderá ir pelo link abaixo:\n` +
       `👉 ${linkConfirmacao}\n\n` +
+      `${linhaAgenda}\n\n` +
       `Contamos com você! Deus abençoe.`;
 
     const urlWhatsApp = `https://wa.me/${telefoneLimpo}?text=${encodeURIComponent(
@@ -291,9 +308,17 @@ export function EscalaCard({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
-                    onClick={() =>
-                      enviarNotificacaoWhatsApp(item.id, nome, telefone, funcao)
-                    }
+                    onClick={() => {
+                      const vId =
+                        item.volunteer?.id || (item as any).volunteerId || "";
+                      enviarNotificacaoWhatsApp(
+                        item.id,
+                        vId,
+                        nome,
+                        telefone,
+                        funcao,
+                      );
+                    }}
                     title="Avisar no WhatsApp"
                     className="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
                   >
