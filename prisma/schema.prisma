@@ -16,25 +16,28 @@ enum StatusEscala {
   RECUSADO
 }
 
-// Tabela de Voluntários / Membros
+// Tabela de Voluntários
 model Volunteer {
-  id          String     @id @default(uuid())
-  clerkUserId String?    @unique // Para vincular ao login do Clerk, se necessário
-  nome        String
-  telefone    String     // Essencial para o alerta no WhatsApp
-  departamento String    // ex: Louvor, Mídia, Recepção
-  ativo       Boolean    @default(true)
+  id           String     @id @default(uuid())
+  clerkUserId  String     // ID do Líder/Admin dono do registro (SEM @unique!)
+  nome         String
+  telefone     String     // Essencial para o alerta no WhatsApp
+  departamento String     // ex: Louvor, Mídia, Recepção
+  ativo        Boolean    @default(true)
   
   // Relacionamento: Um voluntário pode ter várias escalas
-  escalas     Schedule[]
+  escalas      Schedule[]
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([clerkUserId]) // Melhora a performance ao buscar voluntários por usuário
 }
 
 // Tabela de Cultos / Eventos
 model Event {
   id          String     @id @default(uuid())
+  clerkUserId String     // ID do Líder/Admin dono do culto
   titulo      String     // ex: Culto de Domingo, Culto de Jovens
   dataHora    DateTime
   descricao   String?
@@ -44,6 +47,8 @@ model Event {
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  @@index([clerkUserId]) // Melhora a performance ao buscar cultos por usuário
 }
 
 // Tabela de Escalas (A tabela pivô que une Voluntário e Evento)

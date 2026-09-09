@@ -2,8 +2,10 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 
 export async function createVoluntario(formData: FormData) {
+  const { userId } = await auth();
   const nome = (formData.get("nome") as string)?.trim();
   const telefone = (formData.get("telefone") as string)?.trim();
   const departamento = (formData.get("departamento") as string)?.trim();
@@ -12,9 +14,14 @@ export async function createVoluntario(formData: FormData) {
     return { error: "Nome e Telefone/WhatsApp são obrigatórios." };
   }
 
+  if (!userId) {
+    return { error: "Usuário não autenticado." };
+  }
+
   try {
     await prisma.volunteer.create({
       data: {
+        clerkUserId: userId,
         nome,
         telefone,
         departamento: departamento || "Geral",

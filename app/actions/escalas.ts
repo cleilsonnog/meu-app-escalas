@@ -6,41 +6,69 @@ import { auth } from "@clerk/nextjs/server";
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { data: [] };
+  }
+
   try {
-    const escalas = await prisma.schedule.findMany({
-      include: {
-        volunteer: true,
-        event: true,
+    const eventos = await prisma.event.findMany({
+      where: {
+        clerkUserId: userId, // 👈 ISOLAMENTO: Só traz os cultos criados por este usuário
       },
-      orderBy: {
-        event: {
-          dataHora: "asc",
+      include: {
+        escalas: {
+          include: {
+            volunteer: true,
+          },
         },
       },
+      orderBy: {
+        dataHora: "asc",
+      },
     });
-    return { success: true, data: escalas };
+
+    return { data: eventos };
   } catch (error) {
     console.error("Erro ao buscar escalas:", error);
-    return { success: false, data: [] };
+    return { data: [] };
   }
 }
 
 // 2. Buscar lista de voluntários (para preencher o Select do formulário)
 export async function getVoluntarios() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { data: [] };
+  }
+
   try {
     const voluntarios = await prisma.volunteer.findMany({
-      where: { ativo: true },
-      orderBy: { nome: "asc" },
+      where: {
+        clerkUserId: userId, // 👈 ISOLAMENTO: Só traz os voluntários do usuário logado
+      },
+      orderBy: {
+        nome: "asc",
+      },
     });
-    return { success: true, data: voluntarios };
+
+    return { data: voluntarios };
   } catch (error) {
     console.error("Erro ao buscar voluntários:", error);
-    return { success: false, data: [] };
+    return { data: [] };
   }
 }
 
 // 3. Criar novo voluntário
 export async function criarVoluntario(formData: FormData) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: "Acesso negado. Faça login para cadastrar um voluntário." };
+  }
+
   const nome = formData.get("nome") as string;
   const telefone = formData.get("telefone") as string;
   const departamento = formData.get("departamento") as string;
@@ -52,6 +80,7 @@ export async function criarVoluntario(formData: FormData) {
   try {
     await prisma.volunteer.create({
       data: {
+        clerkUserId: userId,
         nome,
         telefone,
         departamento,
@@ -69,6 +98,12 @@ export async function criarVoluntario(formData: FormData) {
 
 // 4. Criar um novo evento com a primeira pessoa escalada
 export async function criarEscala(formData: FormData) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: "Acesso negado. Faça login para criar uma escala." };
+  }
+
   const tituloEvento = formData.get("tituloEvento") as string;
   const dataHora = formData.get("dataHora") as string;
   const volunteerId = formData.get("volunteerId") as string;
@@ -84,6 +119,7 @@ export async function criarEscala(formData: FormData) {
       data: {
         titulo: tituloEvento,
         dataHora: new Date(dataHora),
+        clerkUserId: userId,
       },
     });
 
