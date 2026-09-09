@@ -1,5 +1,10 @@
 import prisma from "@/lib/prisma";
 import { ConfirmarCliente } from "@/components/confirmar-cliente";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 export default async function ConfirmarEscalaPage({
   params,
@@ -21,9 +26,24 @@ export default async function ConfirmarEscalaPage({
   // Busca a escala com as relações de Evento e Voluntário
   const schedule = await prisma.schedule.findUnique({
     where: { id: scheduleId },
-    include: {
-      event: true,
-      volunteer: true,
+    select: {
+      id: true,
+      status: true,
+      observacao: true,
+      funcaoEspecifica: true,
+      event: {
+        select: {
+          titulo: true,
+          dataHora: true,
+        },
+      },
+      volunteer: {
+        select: {
+          nome: true,
+          departamento: true,
+          // NÃO inclua telefone, email, CPF ou id de usuário aqui
+        },
+      },
     },
   });
 

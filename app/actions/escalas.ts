@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
@@ -172,6 +173,11 @@ export async function excluirEscala(id: string) {
 
 // 8. Excluir o culto/evento completo e todas as pessoas vinculadas a ele
 export async function excluirEvento(eventId: string) {
+  // 1. Trava de Segurança: Exige usuário logado
+  const { userId } = await auth();
+  if (!userId) {
+    return { error: "Acesso negado. Faça login para realizar esta ação." };
+  }
   try {
     // Garante a remoção das escalas vinculadas primeiro
     await prisma.schedule.deleteMany({
