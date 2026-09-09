@@ -30,7 +30,7 @@ export default async function ConfirmarEscalaPage({
       id: true,
       status: true,
       observacao: true,
-      funcaoEspecifica: true,
+      funcaoEspecífica: true,
       event: {
         select: {
           titulo: true,
