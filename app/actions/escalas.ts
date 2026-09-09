@@ -28,8 +28,19 @@ export async function getEscalas() {
         dataHora: "asc",
       },
     });
+    // 💡 INJETA O EVENTO EM CADA ESCALA ANTES DO FLATMAP
+    const escalasComEvento = eventos.flatMap((evento) =>
+      evento.escalas.map((escala) => ({
+        ...escala,
+        event: {
+          id: evento.id,
+          titulo: evento.titulo,
+          dataHora: evento.dataHora,
+        },
+      })),
+    );
 
-    return { data: eventos };
+    return { data: escalasComEvento };
   } catch (error) {
     console.error("Erro ao buscar escalas:", error);
     return { data: [] };
@@ -58,6 +69,41 @@ export async function getVoluntarios() {
   } catch (error) {
     console.error("Erro ao buscar voluntários:", error);
     return { data: [] };
+  }
+}
+
+// CRIAR CULTO / EVENTO (Tratando Fuso Horário)
+export async function criarEvento(formData: FormData) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: "Não autorizado" };
+  }
+
+  const titulo = (formData.get("titulo") as string) || "Culto";
+  const dataHoraInput = formData.get("dataHora") as string; // ex: "2026-09-08T19:41"
+
+  if (!dataHoraInput) {
+    return { error: "Data e hora são obrigatórias" };
+  }
+
+  // Ajusta a string ISO para o fuso do Brasil (-03:00) antes de converter para Date
+  const dataComFuso = new Date(`${dataHoraInput}:00-03:00`);
+
+  try {
+    await prisma.event.create({
+      data: {
+        titulo,
+        dataHora: dataComFuso,
+        clerkUserId: userId,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao criar evento:", error);
+    return { error: "Erro ao criar evento." };
   }
 }
 
