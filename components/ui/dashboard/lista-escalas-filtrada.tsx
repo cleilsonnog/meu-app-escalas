@@ -30,11 +30,13 @@ interface VolunteerItem {
 interface Props {
   escalas?: ScheduleItem[];
   voluntarios?: VolunteerItem[];
+  nomeIgreja?: string;
 }
 
 export function ListaEscalasFiltrada({
   escalas = [],
   voluntarios = [],
+  nomeIgreja = "",
 }: Props) {
   const [statusFiltro, setStatusFiltro] = useState<string>("TODOS");
   const [eventoFiltro, setEventoFiltro] = useState<string>("TODOS");
@@ -146,6 +148,7 @@ export function ListaEscalasFiltrada({
               dataHora={proximoCulto.dataHora}
               schedules={proximoCulto.schedules}
               voluntarios={voluntarios}
+              nomeIgreja={nomeIgreja}
             />
           </div>
         </div>
@@ -213,6 +216,7 @@ export function ListaEscalasFiltrada({
               dataHora={grupo.dataHora}
               schedules={grupo.schedules}
               voluntarios={voluntarios}
+              nomeIgreja={nomeIgreja}
             />
           ))}
         </div>

@@ -9,6 +9,14 @@ datasource db {
   provider = "postgresql"
 }
 
+// Tabela de Configurações do Usuário
+model UserSettings {
+  id          String   @id @default(uuid())
+  clerkUserId String   @unique
+  churchName  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 // Enum para o status da escala
 enum StatusEscala {
   PENDENTE

@@ -13,6 +13,7 @@ interface Props {
   nomeVoluntario: string;
   funcao: string;
   departamento: string;
+  nomeIgreja?: string; // Adicionado para exibir o nome da igreja/ministério
 }
 
 export function ConfirmarCliente({
@@ -24,6 +25,7 @@ export function ConfirmarCliente({
   nomeVoluntario,
   funcao,
   departamento,
+  nomeIgreja, // Recebido como prop
 }: Props) {
   const [observacao, setObservacao] = useState(observacaoInicial);
   const [loading, setLoading] = useState(false);
@@ -66,6 +68,10 @@ export function ConfirmarCliente({
           <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
             CONFIRMAÇÃO DE ESCALA
           </span>
+          {/* 👈 3. Nome da Igreja/Ministério em destaque */}
+          {nomeIgreja && (
+            <h1 className="text-2xl font-bold text-slate-900">{nomeIgreja}</h1>
+          )}
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 capitalize">
             {eventoTitulo}
           </h1>

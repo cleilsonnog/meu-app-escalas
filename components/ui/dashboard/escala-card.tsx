@@ -39,6 +39,7 @@ interface EscalaCardProps {
   dataHora: string;
   schedules: ScheduleItem[];
   voluntarios?: VoluntarioOption[];
+  nomeIgreja?: string;
 }
 
 export function EscalaCard({
@@ -47,6 +48,7 @@ export function EscalaCard({
   dataHora,
   schedules = [],
   voluntarios = [],
+  nomeIgreja,
 }: EscalaCardProps) {
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,8 +74,10 @@ export function EscalaCard({
   ) {
     const linkConfirmacao = `${window.location.origin}/confirmar/${scheduleId}`;
     const telefoneLimpo = (telefone || "").replace(/\D/g, "");
+    const linhaIgreja = nomeIgreja ? `🏛️ *${nomeIgreja}*\n` : "";
 
     const mensagem =
+      `${linhaIgreja}` +
       `Olá, *${nome}*! 👋\n\n` +
       `Você foi escalado(a) para o culto:\n` +
       `📌 *${eventoTitulo}*\n` +

@@ -35,13 +35,13 @@ export default async function ConfirmarEscalaPage({
         select: {
           titulo: true,
           dataHora: true,
+          clerkUserId: true, // 👈 1. Incluído para buscar o nome da igreja
         },
       },
       volunteer: {
         select: {
           nome: true,
           departamento: true,
-          // NÃO inclua telefone, email, CPF ou id de usuário aqui
         },
       },
     },
@@ -59,6 +59,16 @@ export default async function ConfirmarEscalaPage({
     );
   }
 
+  // 👈 2. Busca o nome da igreja/ministério
+  let nomeIgreja = "";
+  if (schedule.event?.clerkUserId) {
+    const userSettings = await prisma.userSettings.findUnique({
+      where: { clerkUserId: schedule.event.clerkUserId },
+      select: { churchName: true },
+    });
+    nomeIgreja = userSettings?.churchName || "";
+  }
+
   // Acesso flexível para evitar erros de acentuação no TypeScript durante o build
   const item = schedule as Record<string, any>;
   const funcao = item.funcaoEspecífica || item.funcaoEspecifica || "Geral";
@@ -73,6 +83,7 @@ export default async function ConfirmarEscalaPage({
       nomeVoluntario={schedule.volunteer?.nome || "Voluntário"}
       funcao={funcao}
       departamento={schedule.volunteer?.departamento || "Geral"}
+      nomeIgreja={nomeIgreja} // 👈 3. Prop enviada para o componente de UI
     />
   );
 }
