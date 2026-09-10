@@ -4,6 +4,7 @@ import { useState } from "react";
 import { EscalaCard } from "./escala-card";
 
 interface ScheduleItem {
+  dataHora: string | Date | undefined;
   id: string;
   eventId?: string;
   status: "PENDENTE" | "CONFIRMADO" | "RECUSADO";
@@ -32,6 +33,21 @@ interface Props {
   voluntarios?: VolunteerItem[];
   nomeIgreja?: string;
 }
+const MESES = [
+  { valor: "todos", rotulo: "Todos os Meses" },
+  { valor: "0", rotulo: "Janeiro" },
+  { valor: "1", rotulo: "Fevereiro" },
+  { valor: "2", rotulo: "Março" },
+  { valor: "3", rotulo: "Abril" },
+  { valor: "4", rotulo: "Maio" },
+  { valor: "5", rotulo: "Junho" },
+  { valor: "6", rotulo: "Julho" },
+  { valor: "7", rotulo: "Agosto" },
+  { valor: "8", rotulo: "Setembro" },
+  { valor: "9", rotulo: "Outubro" },
+  { valor: "10", rotulo: "Novembro" },
+  { valor: "11", rotulo: "Dezembro" },
+];
 
 export function ListaEscalasFiltrada({
   escalas = [],
@@ -41,6 +57,7 @@ export function ListaEscalasFiltrada({
   const [statusFiltro, setStatusFiltro] = useState<string>("TODOS");
   const [eventoFiltro, setEventoFiltro] = useState<string>("TODOS");
   const [busca, setBusca] = useState<string>("");
+  const [mesSelecionado, setMesSelecionado] = useState<string>("todos");
 
   // 1. Aplica os filtros na lista de escalas
   const escalasFiltradas = (escalas || []).filter((escala) => {
@@ -60,8 +77,14 @@ export function ListaEscalasFiltrada({
       busca === "" ||
       nomeVoluntario.toLowerCase().includes(busca.toLowerCase()) ||
       funcao.toLowerCase().includes(busca.toLowerCase());
+    // 3. Filtro de Mês
+    const dataHoraRaw = escala.event?.dataHora || escala.dataHora;
+    const dataEvento = dataHoraRaw ? new Date(dataHoraRaw) : null;
+    const bateuMes =
+      mesSelecionado === "todos" ||
+      (dataEvento && dataEvento.getMonth() === Number(mesSelecionado));
 
-    return atendeStatus && atendeEvento && atendeBusca;
+    return atendeStatus && atendeEvento && atendeBusca && bateuMes;
   });
 
   // 2. Agrupa os resultados por EVENTO (Culto)
@@ -191,6 +214,18 @@ export function ListaEscalasFiltrada({
             {eventosUnicos.map((titulo) => (
               <option key={titulo} value={titulo}>
                 {titulo}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={mesSelecionado}
+            onChange={(e) => setMesSelecionado(e.target.value)}
+            className="h-10 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            {MESES.map((mes) => (
+              <option key={mes.valor} value={mes.valor}>
+                {mes.rotulo}
               </option>
             ))}
           </select>

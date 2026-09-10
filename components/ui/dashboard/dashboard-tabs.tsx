@@ -17,6 +17,11 @@ export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
     "escalas" | "voluntarios" | "relatorios"
   >("escalas");
 
+  // 👈 CONTA APENAS CULTOS/EVENTOS ÚNICOS
+  const totalEventos = new Set(
+    escalas.map((e) => e.eventId || e.event?.id || e.id),
+  ).size;
+
   // 2. Cálculos Automáticos para o Relatório baseados nas props recebidas
   const totalEscalas = escalas.length;
   const confirmadas = escalas.filter((e) => e.status === "CONFIRMADO").length;
@@ -82,7 +87,7 @@ export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          📋 Painel de Escalas ({escalas.length})
+          📋 Painel de Cultos/Eventos ({totalEventos})
         </button>
 
         {/* ABA 2: VOLUNTÁRIOS */}
@@ -94,7 +99,7 @@ export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          👥 Voluntários ({voluntarios.length})
+          👥 Voluntários Cadastrado ({voluntarios.length})
         </button>
 
         {/* 👈 ABA 3: RELATÓRIOS & DESEMPENHO */}
