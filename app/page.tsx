@@ -59,7 +59,11 @@ export default async function DashboardPage() {
       </header>
 
       <main>
-        <DashboardTabs escalas={listaEscalas} voluntarios={listaVoluntarios} />
+        <DashboardTabs
+          escalas={listaEscalas}
+          voluntarios={listaVoluntarios}
+          nomeIgreja={igrejaName}
+        />
       </main>
     </div>
   );
