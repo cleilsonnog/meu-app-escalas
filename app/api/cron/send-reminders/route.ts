@@ -43,7 +43,9 @@ export async function GET(req: NextRequest) {
   });
 
   // Sanitiza a URL base
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "")
+    .trim()
+    .replace(/\/$/, "");
 
   // 4. Busca os nomes das Igrejas/Ministérios para os eventos encontrados
   const clerkUserIds = [
