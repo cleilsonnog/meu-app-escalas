@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import { generateScheduleToken } from "@/lib/tokens";
 import { StatusEscala } from "@prisma/client";
 
 export const maxDuration = 60;
@@ -16,7 +15,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 2. Intervalo de busca para o dia seguinte
+  // 2. Intervalo do dia seguinte (Fuso Horário de Brasília)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
@@ -24,10 +23,12 @@ export async function GET(req: NextRequest) {
   const endOfTomorrow = new Date(tomorrow);
   endOfTomorrow.setHours(23, 59, 59, 999);
 
-  // 3. Busca escalas pendentes
-  const pendingSchedules = await prisma.schedule.findMany({
+  // 3. Busca escalas PENDENTES e CONFIRMADAS para amanhã
+  const activeSchedules = await prisma.schedule.findMany({
     where: {
-      status: StatusEscala.PENDENTE,
+      status: {
+        in: [StatusEscala.PENDENTE, StatusEscala.CONFIRMADO],
+      },
       event: {
         dataHora: {
           gte: tomorrow,
@@ -41,35 +42,18 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Sanitiza a URL removendo barra no final, se houver
+  // Sanitiza a URL base removendo barra no final
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
-  // 4. Filtrar voluntários com telefone válido antes do disparo
-  const validSchedules = pendingSchedules.filter(
+  // 4. Filtra voluntários com telefone cadastrado
+  const validSchedules = activeSchedules.filter(
     (item) => item.volunteer && item.volunteer.telefone,
   );
 
-  // 5. Disparo em paralelo das mensagens
+  // 5. Disparo em paralelo
   const results = await Promise.allSettled(
     validSchedules.map(async (item) => {
-      const confirmToken = generateScheduleToken({
-        scheduleId: item.id,
-        volunteerId: item.volunteer.id,
-        action: "CONFIRM",
-      });
-
-      const declineToken = generateScheduleToken({
-        scheduleId: item.id,
-        volunteerId: item.volunteer.id,
-        action: "DECLINE",
-      });
-
-      const confirmUrl = `${appUrl}/api/schedules/respond?token=${confirmToken}`;
-      const declineUrl = `${appUrl}/api/schedules/respond?token=${declineToken}`;
-
       const funcao = item.funcaoEspecífica || "Serviço Geral";
-
-      // Fix do Fuso Horário do Brasil para servidores UTC (Vercel)
       const horario = item.event.dataHora
         ? new Date(item.event.dataHora).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
@@ -78,7 +62,34 @@ export async function GET(req: NextRequest) {
           })
         : "Horário não informado";
 
-      const message = `Olá, *${item.volunteer.nome}*! 👋\n\nVocê está escalado(a) para servir amanhã:\n📌 *Evento:* ${item.event.titulo}\n🛠️ *Função:* ${funcao}\n⏰ *Horário:* ${horario}\n\nPor favor, confirme sua presença:\n\n✅ *Confirmar:* \n${confirmUrl}\n\n❌ *Não poderei comparecer:* \n${declineUrl}`;
+      // URL que direciona o voluntário para o card do print (/confirmar/[id])
+      const confirmPageUrl = `${appUrl}/confirmar/${item.id}`;
+
+      let message = "";
+
+      // MENSAGEM PARA QUEM JÁ CONFIRMOU (Lembrete)
+      if (item.status === StatusEscala.CONFIRMADO) {
+        message =
+          `Olá, *${item.volunteer.nome}*! Passando para lembrar do seu servir amanhã! 🙌\n\n` +
+          `📌 *Evento:* ${item.event.titulo}\n` +
+          `🛠️ *Função:* ${funcao}\n` +
+          `⏰ *Horário:* ${horario}\n\n` +
+          `Contamos com a sua presença!\n\n` +
+          `🚨 *Teve algum imprevisto de última hora?*\n` +
+          `Acesse o link para atualizar seu status ou avisar o líder:\n` +
+          `${confirmPageUrl}`;
+      }
+      // MENSAGEM PARA QUEM AINDA ESTÁ PENDENTE (Solicitação de resposta)
+      else {
+        message =
+          `Olá, *${item.volunteer.nome}*! 👋\n\n` +
+          `Você está escalado(a) para servir amanhã:\n` +
+          `📌 *Evento:* ${item.event.titulo}\n` +
+          `🛠️ *Função:* ${funcao}\n` +
+          `⏰ *Horário:* ${horario}\n\n` +
+          `Por favor, acesse o link abaixo para confirmar sua presença ou relatar ausência:\n` +
+          `👉 ${confirmPageUrl}`;
+      }
 
       return sendWhatsAppMessage({
         phone: item.volunteer.telefone,
@@ -87,13 +98,10 @@ export async function GET(req: NextRequest) {
     }),
   );
 
-  const successCount = results.filter((r) => r.status === "fulfilled").length;
-  const failureCount = results.filter((r) => r.status === "rejected").length;
-
   return NextResponse.json({
-    totalFound: pendingSchedules.length,
+    totalFound: activeSchedules.length,
     processedCount: validSchedules.length,
-    successCount,
-    failureCount,
+    successCount: results.filter((r) => r.status === "fulfilled").length,
+    failureCount: results.filter((r) => r.status === "rejected").length,
   });
 }
