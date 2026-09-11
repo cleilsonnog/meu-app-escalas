@@ -86,22 +86,22 @@ export function EscalaCard({
     if (telefoneLimpo.length >= 10 && telefoneLimpo.length <= 11) {
       telefoneLimpo = `55${telefoneLimpo}`;
     }
-    const linhaIgreja = nomeIgreja ? `🏛️ *${nomeIgreja}*\n` : "";
+    const linhaIgreja = nomeIgreja ? `⛪ *${nomeIgreja}*\n` : "";
     // 👈 3. Linha adicional com a agenda do voluntário (se existir)
     const linhaAgenda = linkAgendaPessoal
-      ? `\n\n📅 *Ver todas as suas escalas:* ${linkAgendaPessoal}`
+      ? `\n👀 *Ver todas as suas escalas:* ${linkAgendaPessoal}\n`
       : "";
 
     const mensagem =
-      `${linhaIgreja}` +
+      `*${linhaIgreja}*\n` +
       `Olá, *${nome}*! 👋\n\n` +
       `Você foi escalado(a) para o culto:\n` +
       `📌 *${eventoTitulo}*\n` +
       `📅 *Data/Hora:* ${dataFormatada}\n` +
-      `🎸 *Função:* ${funcao}\n\n` +
+      `🛠️ *Função:* ${funcao}\n\n` +
       `Por favor, confirme sua presença ou avise se não poderá ir pelo link abaixo:\n` +
-      `👉 ${linkConfirmacao}\n\n` +
-      `${linhaAgenda}\n\n` +
+      `👉 ${linkConfirmacao}\n` +
+      `${linhaAgenda}\n` +
       `Contamos com você! Deus abençoe.`;
 
     const urlWhatsApp = `https://wa.me/${telefoneLimpo}?text=${encodeURIComponent(

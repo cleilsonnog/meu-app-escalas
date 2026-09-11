@@ -42,53 +42,90 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Sanitiza a URL base removendo barra no final
+  // Sanitiza a URL base
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
-  // 4. Filtra voluntários com telefone cadastrado
+  // 4. Busca os nomes das Igrejas/Ministérios para os eventos encontrados
+  const clerkUserIds = [
+    ...new Set(
+      activeSchedules
+        .map((s) => s.event?.clerkUserId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const userSettings = await prisma.userSettings.findMany({
+    where: { clerkUserId: { in: clerkUserIds } },
+    select: { clerkUserId: true, churchName: true },
+  });
+
+  const churchNameMap = new Map(
+    userSettings.map((s) => [s.clerkUserId, s.churchName]),
+  );
+
+  // 5. Filtra voluntários com telefone cadastrado
   const validSchedules = activeSchedules.filter(
     (item) => item.volunteer && item.volunteer.telefone,
   );
 
-  // 5. Disparo em paralelo
+  // 6. Disparo em paralelo
   const results = await Promise.allSettled(
     validSchedules.map(async (item) => {
       const funcao = item.funcaoEspecífica || "Serviço Geral";
-      const horario = item.event.dataHora
-        ? new Date(item.event.dataHora).toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "America/Sao_Paulo",
-          })
-        : "Horário não informado";
+      const nomeIgreja =
+        churchNameMap.get(item.event.clerkUserId || "") || "Sua Igreja";
 
-      // URL que direciona o voluntário para o card do print (/confirmar/[id])
+      // Formatação da data e hora (ex: "sáb., 12/09, 13:00")
+      let dataHoraTexto = "Horário não informado";
+      if (item.event.dataHora) {
+        const dateObj = new Date(item.event.dataHora);
+        const dataFormatada = dateObj.toLocaleDateString("pt-BR", {
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
+          timeZone: "America/Sao_Paulo",
+        });
+        const horaFormatada = dateObj.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "America/Sao_Paulo",
+        });
+        dataHoraTexto = `${dataFormatada}, ${horaFormatada}`;
+      }
+
+      // Links diretos
       const confirmPageUrl = `${appUrl}/confirmar/${item.id}`;
+      const volunteerPortalUrl = `${appUrl}/voluntario/${item.volunteer.id}`;
 
       let message = "";
 
       // MENSAGEM PARA QUEM JÁ CONFIRMOU (Lembrete)
       if (item.status === StatusEscala.CONFIRMADO) {
         message =
-          `Olá, *${item.volunteer.nome}*! Passando para lembrar do seu servir amanhã! 🙌\n\n` +
-          `📌 *Evento:* ${item.event.titulo}\n` +
-          `🛠️ *Função:* ${funcao}\n` +
-          `⏰ *Horário:* ${horario}\n\n` +
-          `Contamos com a sua presença!\n\n` +
-          `🚨 *Teve algum imprevisto de última hora?*\n` +
-          `Acesse o link para atualizar seu status ou avisar o líder:\n` +
-          `${confirmPageUrl}`;
+          `⛪ *${nomeIgreja}*\n` +
+          `Olá, *${item.volunteer.nome}*! 👋\n\n` +
+          `Passando para lembrar do seu servir amanhã!\n` +
+          `📌 *${item.event.titulo}*\n` +
+          `📅 *Data/Hora:* ${dataHoraTexto}\n` +
+          `🛠️ *Função:* ${funcao}\n\n` +
+          `Teve algum imprevisto de última hora? Avise pelo link abaixo:\n` +
+          `👉 ${confirmPageUrl}\n\n` +
+          `👀 *Ver todas as suas escalas:* ${volunteerPortalUrl}\n\n` +
+          `Contamos com você! Deus abençoe. 🙏`;
       }
-      // MENSAGEM PARA QUEM AINDA ESTÁ PENDENTE (Solicitação de resposta)
+      // MENSAGEM PARA QUEM ESTÁ PENDENTE (Solicitação de resposta)
       else {
         message =
+          `⛪ *${nomeIgreja}*\n` +
           `Olá, *${item.volunteer.nome}*! 👋\n\n` +
-          `Você está escalado(a) para servir amanhã:\n` +
-          `📌 *Evento:* ${item.event.titulo}\n` +
-          `🛠️ *Função:* ${funcao}\n` +
-          `⏰ *Horário:* ${horario}\n\n` +
-          `Por favor, acesse o link abaixo para confirmar sua presença ou relatar ausência:\n` +
-          `👉 ${confirmPageUrl}`;
+          `Você foi escalado(a) para o culto:\n` +
+          `📌 *${item.event.titulo}*\n` +
+          `📅 *Data/Hora:* ${dataHoraTexto}\n` +
+          `🛠️ *Função:* ${funcao}\n\n` +
+          `Por favor, confirme sua presença ou avise se não poderá ir pelo link abaixo:\n` +
+          `👉 ${confirmPageUrl}\n\n` +
+          `👀 *Ver todas as suas escalas:* ${volunteerPortalUrl}\n\n` +
+          `Contamos com você! Deus abençoe. 🙏`;
       }
 
       return sendWhatsAppMessage({

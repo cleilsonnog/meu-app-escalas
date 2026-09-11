@@ -18,7 +18,7 @@ export async function sendWhatsAppMessage({
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json; charset=UTF-8",
         apikey: process.env.EVOLUTION_API_KEY!,
       },
       body: JSON.stringify({
