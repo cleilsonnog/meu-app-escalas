@@ -13,6 +13,7 @@ import {
   adicionarVoluntarioAoEvento,
   excluirEscala,
   excluirEvento,
+  gerarLinksNotificacao,
 } from "@/app/actions/escalas";
 
 interface ScheduleItem {
@@ -68,16 +69,22 @@ export function EscalaCard({
   });
 
   // Notificar no WhatsApp
-  function enviarNotificacaoWhatsApp(
+  async function enviarNotificacaoWhatsApp(
     scheduleId: string,
     volunteerId: string,
     nome: string,
     telefone: string,
     funcao: string,
   ) {
-    const linkConfirmacao = `${window.location.origin}/confirmar/${scheduleId}`;
+    const links = await gerarLinksNotificacao(scheduleId);
+    if ("error" in links) {
+      alert(links.error);
+      return;
+    }
+
+    const linkConfirmacao = `${window.location.origin}${links.confirmPath}`;
     const linkAgendaPessoal = volunteerId
-      ? `${window.location.origin}/voluntario/${volunteerId}`
+      ? `${window.location.origin}${links.portalPath}`
       : "";
 
     let telefoneLimpo = (telefone || "").replace(/\D/g, "");

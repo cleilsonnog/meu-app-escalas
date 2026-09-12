@@ -4,7 +4,38 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import { verifyScheduleToken } from "@/lib/tokens";
+import { generateScheduleToken, verifyScheduleToken } from "@/lib/tokens";
+
+export async function gerarLinksNotificacao(scheduleId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Acesso negado." };
+
+  const schedule = await prisma.schedule.findFirst({
+    where: { id: scheduleId, event: { clerkUserId: userId } },
+    select: { id: true, volunteerId: true },
+  });
+
+  if (!schedule) return { error: "Escala não encontrada." };
+
+  const confirmToken = generateScheduleToken({
+    scheduleId: schedule.id,
+    volunteerId: schedule.volunteerId,
+    action: "CONFIRM",
+  });
+  const portalToken = generateScheduleToken(
+    {
+      scheduleId: schedule.id,
+      volunteerId: schedule.volunteerId,
+      action: "PORTAL",
+    },
+    "30d",
+  );
+
+  return {
+    confirmPath: `/confirmar/${schedule.id}?token=${encodeURIComponent(confirmToken)}`,
+    portalPath: `/voluntario/${schedule.volunteerId}?token=${encodeURIComponent(portalToken)}`,
+  };
+}
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
