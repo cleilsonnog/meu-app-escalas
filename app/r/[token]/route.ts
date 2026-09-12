@@ -19,5 +19,5 @@ export async function GET(
       : `/confirmar/${payload.scheduleId}`;
   const url = new URL(destination, req.url);
   url.searchParams.set("token", params.token);
-  return NextResponse.rewrite(url);
+  return NextResponse.redirect(url);
 }
