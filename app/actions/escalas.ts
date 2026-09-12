@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import { generateScheduleToken, verifyScheduleToken } from "@/lib/tokens";
+import { generateCompactScheduleToken, verifyScheduleToken } from "@/lib/tokens";
 
 export async function gerarLinksNotificacao(scheduleId: string) {
   const { userId } = await auth();
@@ -17,12 +17,12 @@ export async function gerarLinksNotificacao(scheduleId: string) {
 
   if (!schedule) return { error: "Escala não encontrada." };
 
-  const confirmToken = generateScheduleToken({
+  const confirmToken = generateCompactScheduleToken({
     scheduleId: schedule.id,
     volunteerId: schedule.volunteerId,
     action: "CONFIRM",
   });
-  const portalToken = generateScheduleToken(
+  const portalToken = generateCompactScheduleToken(
     {
       scheduleId: schedule.id,
       volunteerId: schedule.volunteerId,
@@ -32,8 +32,8 @@ export async function gerarLinksNotificacao(scheduleId: string) {
   );
 
   return {
-    confirmPath: `/confirmar/${schedule.id}?token=${encodeURIComponent(confirmToken)}`,
-    portalPath: `/voluntario/${schedule.volunteerId}?token=${encodeURIComponent(portalToken)}`,
+    confirmPath: `/r/${confirmToken}`,
+    portalPath: `/r/${portalToken}`,
   };
 }
 
