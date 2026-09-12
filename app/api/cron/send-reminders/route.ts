@@ -213,7 +213,11 @@ export async function GET(req: NextRequest) {
     failureCount,
     failures: results.flatMap((result) =>
       result.status === "rejected"
-        ? [result.reason instanceof Error ? result.reason.message : String(result.reason)]
+        ? [
+            result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason),
+          ]
         : [],
     ),
   });
