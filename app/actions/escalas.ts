@@ -11,11 +11,15 @@ import {
 import { getAccessContext } from "@/lib/access";
 
 export async function gerarLinksNotificacao(scheduleId: string) {
-  const { userId } = await auth();
-  if (!userId) return { error: "Acesso negado." };
+  const access = await getAccessContext();
+  if (!access) return { error: "Acesso negado." };
 
   const schedule = await prisma.schedule.findFirst({
-    where: { id: scheduleId, event: { clerkUserId: userId } },
+    where: {
+      id: scheduleId,
+      event: { clerkUserId: access.ownerClerkUserId },
+      ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+    },
     select: { id: true, volunteerId: true },
   });
 
@@ -415,14 +419,18 @@ export async function responderEscala(
 }
 // 7. Excluir uma pessoa específica da escala (Schedule)
 export async function excluirEscala(id: string) {
-  const { userId } = await auth();
-  if (!userId) {
+  const access = await getAccessContext();
+  if (!access) {
     return { error: "Acesso negado." };
   }
 
   try {
     const schedule = await prisma.schedule.findFirst({
-      where: { id, event: { clerkUserId: userId } },
+      where: {
+        id,
+        event: { clerkUserId: access.ownerClerkUserId },
+        ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+      },
       select: { id: true },
     });
     if (!schedule) return { error: "Escala não encontrada." };
@@ -440,14 +448,19 @@ export async function excluirEscala(id: string) {
 
 // 8. Excluir o culto/evento completo e todas as pessoas vinculadas a ele
 export async function excluirEvento(eventId: string) {
-  // 1. Trava de Segurança: Exige usuário logado
-  const { userId } = await auth();
-  if (!userId) {
+  const access = await getAccessContext();
+  if (!access) {
     return { error: "Acesso negado. Faça login para realizar esta ação." };
   }
   try {
     const evento = await prisma.event.findFirst({
-      where: { id: eventId, clerkUserId: userId },
+      where: {
+        id: eventId,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { escalas: { some: { ministryId: access.ministryId } } }
+          : {}),
+      },
       select: { id: true },
     });
     if (!evento) return { error: "Evento não encontrado." };

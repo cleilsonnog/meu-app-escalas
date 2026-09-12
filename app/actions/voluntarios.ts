@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
 import { getAccessContext } from "@/lib/access";
 
 export async function createVoluntario(formData: FormData) {
@@ -44,7 +43,7 @@ export async function createVoluntario(formData: FormData) {
 }
 
 export async function updateVoluntario(id: string, formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
   const nome = (formData.get("nome") as string)?.trim();
   const telefone = (formData.get("telefone") as string)?.trim();
   const departamento = (formData.get("departamento") as string)?.trim();
@@ -53,13 +52,19 @@ export async function updateVoluntario(id: string, formData: FormData) {
     return { error: "Nome e Telefone/WhatsApp são obrigatórios." };
   }
 
-  if (!userId) {
+  if (!access) {
     return { error: "Usuário não autenticado." };
   }
 
   try {
     const result = await prisma.volunteer.updateMany({
-      where: { id, clerkUserId: userId },
+      where: {
+        id,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { ministries: { some: { id: access.ministryId } } }
+          : {}),
+      },
       data: {
         nome,
         telefone,
@@ -81,19 +86,33 @@ export async function updateVoluntario(id: string, formData: FormData) {
 }
 
 export async function deleteVoluntario(id: string) {
-  const { userId } = await auth();
-  if (!userId) {
+  const access = await getAccessContext();
+  if (!access) {
     return { error: "Usuário não autenticado." };
   }
 
   try {
     // Apaga escalas vinculadas ao voluntário primeiro para não violar a chave estrangeira
     await prisma.schedule.deleteMany({
-      where: { volunteerId: id, volunteer: { clerkUserId: userId } },
+      where: {
+        volunteerId: id,
+        volunteer: {
+          clerkUserId: access.ownerClerkUserId,
+          ...(access.role === "LEADER"
+            ? { ministries: { some: { id: access.ministryId } } }
+            : {}),
+        },
+      },
     });
 
     const result = await prisma.volunteer.deleteMany({
-      where: { id, clerkUserId: userId },
+      where: {
+        id,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { ministries: { some: { id: access.ministryId } } }
+          : {}),
+      },
     });
     if (result.count === 0) {
       return { error: "Voluntário não encontrado." };
