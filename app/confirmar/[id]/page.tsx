@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { ConfirmarCliente } from "@/components/confirmar-cliente";
 import { Metadata } from "next";
+import { verifyScheduleToken } from "@/lib/tokens";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -8,12 +9,16 @@ export const metadata: Metadata = {
 
 export default async function ConfirmarEscalaPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams: { token?: string };
 }) {
   const scheduleId = params?.id;
+  const token = searchParams?.token;
+  const tokenPayload = token ? verifyScheduleToken(token) : null;
 
-  if (!scheduleId) {
+  if (!scheduleId || !tokenPayload) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
         <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
@@ -40,12 +45,28 @@ export default async function ConfirmarEscalaPage({
       },
       volunteer: {
         select: {
+          id: true,
           nome: true,
           departamento: true,
         },
       },
     },
   });
+
+  if (
+    !schedule ||
+    tokenPayload.action === "PORTAL" ||
+    tokenPayload.scheduleId !== scheduleId ||
+    tokenPayload.volunteerId !== schedule.volunteer?.id
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
+          <p className="text-slate-600 font-medium">Link inválido.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!schedule) {
     return (
@@ -76,6 +97,7 @@ export default async function ConfirmarEscalaPage({
   return (
     <ConfirmarCliente
       scheduleId={schedule.id}
+        token={token}
       statusInicial={schedule.status}
       observacaoInicial={schedule.observacao || ""}
       eventoTitulo={schedule.event?.titulo || "Culto"}

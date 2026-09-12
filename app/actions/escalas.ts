@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { verifyScheduleToken } from "@/lib/tokens";
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
@@ -161,6 +162,14 @@ export async function criarEscala(formData: FormData) {
   }
 
   try {
+    const volunteer = await prisma.volunteer.findFirst({
+      where: { id: volunteerId, clerkUserId: userId },
+      select: { id: true },
+    });
+    if (!volunteer) {
+      return { error: "Voluntário não pertence a este usuário." };
+    }
+
     // Cria o evento e já associa a primeira pessoa escalada
     const evento = await prisma.event.create({
       data: {
@@ -190,15 +199,28 @@ export async function criarEscala(formData: FormData) {
 
 // 5. Adicionar um novo voluntário a um evento JÁ EXISTENTE
 export async function adicionarVoluntarioAoEvento(formData: FormData) {
+  const { userId } = await auth();
   const eventId = formData.get("eventId") as string;
   const volunteerId = formData.get("volunteerId") as string;
   const funcaoEspecifica = formData.get("funcaoEspecifica") as string;
+
+  if (!userId) {
+    return { error: "Acesso negado." };
+  }
 
   if (!eventId || !volunteerId || !funcaoEspecifica) {
     return { error: "Selecione o voluntário e preencha a função." };
   }
 
   try {
+    const [event, volunteer] = await Promise.all([
+      prisma.event.findFirst({ where: { id: eventId, clerkUserId: userId }, select: { id: true } }),
+      prisma.volunteer.findFirst({ where: { id: volunteerId, clerkUserId: userId }, select: { id: true } }),
+    ]);
+    if (!event || !volunteer) {
+      return { error: "Evento ou voluntário não pertence a este usuário." };
+    }
+
     await prisma.schedule.create({
       data: {
         eventId: eventId,
@@ -222,18 +244,36 @@ export async function responderEscala(
   id: string,
   novoStatus: "CONFIRMADO" | "RECUSADO",
   observacao?: string,
+  token?: string,
 ) {
   try {
-    // 1. Atualiza no banco e traz as relações de Evento e Voluntário
-    const schedule = await prisma.schedule.update({
+    const tokenPayload = token ? verifyScheduleToken(token) : null;
+    if (
+      !tokenPayload ||
+      tokenPayload.action === "PORTAL" ||
+      tokenPayload.scheduleId !== id
+    ) {
+      return { error: "Link de resposta inválido ou expirado." };
+    }
+
+    // 1. Valida a escala e o voluntário antes de alterar o status
+    const schedule = await prisma.schedule.findUnique({
+      where: { id },
+      include: {
+        event: true,
+        volunteer: true,
+      },
+    });
+
+    if (!schedule || schedule.volunteerId !== tokenPayload.volunteerId) {
+      return { error: "Link de resposta inválido." };
+    }
+
+    await prisma.schedule.update({
       where: { id },
       data: {
         status: novoStatus,
         observacao: observacao?.trim() || null,
-      },
-      include: {
-        event: true,
-        volunteer: true,
       },
     });
 
@@ -290,10 +330,19 @@ export async function responderEscala(
 }
 // 7. Excluir uma pessoa específica da escala (Schedule)
 export async function excluirEscala(id: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    return { error: "Acesso negado." };
+  }
+
   try {
-    await prisma.schedule.delete({
-      where: { id },
+    const schedule = await prisma.schedule.findFirst({
+      where: { id, event: { clerkUserId: userId } },
+      select: { id: true },
     });
+    if (!schedule) return { error: "Escala não encontrada." };
+
+    await prisma.schedule.delete({ where: { id: schedule.id } });
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -312,6 +361,12 @@ export async function excluirEvento(eventId: string) {
     return { error: "Acesso negado. Faça login para realizar esta ação." };
   }
   try {
+    const evento = await prisma.event.findFirst({
+      where: { id: eventId, clerkUserId: userId },
+      select: { id: true },
+    });
+    if (!evento) return { error: "Evento não encontrado." };
+
     // Garante a remoção das escalas vinculadas primeiro
     await prisma.schedule.deleteMany({
       where: { eventId },

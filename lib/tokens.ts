@@ -1,23 +1,44 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret-key-default";
+const JWT_SECRET = process.env.JWT_SECRET ?? "";
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET não configurado");
+}
 
 export interface ScheduleTokenPayload {
   scheduleId: string;
   volunteerId: string;
-  action: "CONFIRM" | "DECLINE";
+  action: "CONFIRM" | "DECLINE" | "PORTAL";
 }
 
-export function generateScheduleToken(payload: ScheduleTokenPayload): string {
-  // Validade de 48 horas para o token expirante
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "48h" });
+export function generateScheduleToken(
+  payload: ScheduleTokenPayload,
+  expiresIn: "48h" | "30d" = "48h",
+): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
 export function verifyScheduleToken(
   token: string,
 ): ScheduleTokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as ScheduleTokenPayload;
+    const payload = jwt.verify(token, JWT_SECRET);
+
+    if (typeof payload !== "object" || payload === null) {
+      return null;
+    }
+
+    const { scheduleId, volunteerId, action } = payload as Partial<ScheduleTokenPayload>;
+    if (
+      typeof scheduleId !== "string" ||
+      typeof volunteerId !== "string" ||
+      !["CONFIRM", "DECLINE", "PORTAL"].includes(action as string)
+    ) {
+      return null;
+    }
+
+    return { scheduleId, volunteerId, action: action as ScheduleTokenPayload["action"] };
   } catch {
     return null;
   }

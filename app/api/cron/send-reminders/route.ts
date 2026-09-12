@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { generateScheduleToken } from "@/lib/tokens";
 import { StatusEscala } from "@prisma/client";
 
 export const maxDuration = 60;
@@ -118,8 +119,21 @@ export async function GET(req: NextRequest) {
         }
 
         // Links diretos
-        const confirmPageUrl = `${appUrl}/confirmar/${item.id}`;
-        const volunteerPortalUrl = `${appUrl}/voluntario/${item.volunteer.id}`;
+        const confirmToken = generateScheduleToken({
+          scheduleId: item.id,
+          volunteerId: item.volunteer.id,
+          action: "CONFIRM",
+        });
+        const portalToken = generateScheduleToken(
+          {
+            scheduleId: item.id,
+            volunteerId: item.volunteer.id,
+            action: "PORTAL",
+          },
+          "30d",
+        );
+        const confirmPageUrl = `${appUrl}/confirmar/${item.id}?token=${encodeURIComponent(confirmToken)}`;
+        const volunteerPortalUrl = `${appUrl}/voluntario/${item.volunteer.id}?token=${encodeURIComponent(portalToken)}`;
 
         let message = "";
 

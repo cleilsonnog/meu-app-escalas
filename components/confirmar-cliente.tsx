@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface Props {
   scheduleId: string;
+  token?: string;
   statusInicial: string;
   observacaoInicial: string;
   eventoTitulo: string;
@@ -18,6 +19,7 @@ interface Props {
 
 export function ConfirmarCliente({
   scheduleId,
+  token,
   statusInicial,
   observacaoInicial,
   eventoTitulo,
@@ -51,7 +53,12 @@ export function ConfirmarCliente({
 
   async function handleResposta(novoStatus: "CONFIRMADO" | "RECUSADO") {
     setLoading(true);
-    const res = await responderEscala(scheduleId, novoStatus, observacao);
+    const res = await responderEscala(
+      scheduleId,
+      novoStatus,
+      observacao,
+      token,
+    );
     setLoading(false);
 
     if (res.success) {

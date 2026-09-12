@@ -15,7 +15,12 @@ export async function GET(req: NextRequest) {
 
   const payload = verifyScheduleToken(token);
 
-  if (!payload || !payload.scheduleId || !payload.volunteerId) {
+  if (
+    !payload ||
+    !payload.scheduleId ||
+    !payload.volunteerId ||
+    !["CONFIRM", "DECLINE"].includes(payload.action)
+  ) {
     return NextResponse.redirect(
       new URL("/schedule/status?error=invalid_token", req.url),
     );

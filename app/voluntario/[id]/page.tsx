@@ -2,6 +2,7 @@
 import prisma from "@/lib/prisma";
 import { VoluntarioAgendaCliente } from "@/components/voluntario-agenda-cliente";
 import { Metadata } from "next";
+import { verifyScheduleToken } from "@/lib/tokens";
 
 export const metadata: Metadata = {
   title: "Minhas Escalas | Portal do Voluntário",
@@ -10,12 +11,22 @@ export const metadata: Metadata = {
 
 export default async function VoluntarioAgendaPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams: { token?: string };
 }) {
   const volunteerId = params?.id;
+  const tokenPayload = searchParams?.token
+    ? verifyScheduleToken(searchParams.token)
+    : null;
 
-  if (!volunteerId) {
+  if (
+    !volunteerId ||
+    !tokenPayload ||
+    tokenPayload.action !== "PORTAL" ||
+    tokenPayload.volunteerId !== volunteerId
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
         <p className="text-slate-600 font-medium">
