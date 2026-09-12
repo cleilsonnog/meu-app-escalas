@@ -19,7 +19,7 @@ export async function getAdministracao() {
     prisma.ministry.findMany({
       where: { clerkUserId: access.ownerClerkUserId },
       include: {
-        leader: true,
+        leaders: true,
         _count: { select: { volunteers: true, escalas: true } },
       },
       orderBy: { nome: "asc" },
@@ -37,7 +37,7 @@ export async function getAdministracao() {
       include: {
         volunteer: { select: { nome: true } },
         event: { select: { titulo: true, dataHora: true } },
-        ministry: { include: { leader: { select: { id: true, nome: true } } } },
+        ministry: { include: { leaders: { select: { id: true, nome: true } } } },
       },
       orderBy: { event: { dataHora: "asc" } },
     }),
@@ -133,7 +133,7 @@ export async function cadastrarLider(formData: FormData) {
 
     await prisma.ministry.update({
       where: { id: ministry.id },
-      data: { leaderId: leader.id },
+      data: { leaders: { connect: { id: leader.id } } },
     });
 
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
@@ -201,15 +201,8 @@ export async function atualizarLider(id: string, formData: FormData) {
         email,
         telefone,
         ministries: { set: [{ id: ministry.id }] },
+        ledMinistries: { set: [{ id: ministry.id }] },
       },
-    }),
-    prisma.ministry.updateMany({
-      where: { clerkUserId: access.ownerClerkUserId, leaderId: id },
-      data: { leaderId: null },
-    }),
-    prisma.ministry.update({
-      where: { id: ministry.id },
-      data: { leaderId: id },
     }),
   ]);
   revalidatePath("/dashboard");
@@ -227,10 +220,6 @@ export async function excluirLider(id: string) {
   if (!leader) return { error: "Líder não encontrado." };
 
   await prisma.$transaction([
-    prisma.ministry.updateMany({
-      where: { clerkUserId: access.ownerClerkUserId, leaderId: id },
-      data: { leaderId: null },
-    }),
     prisma.schedule.deleteMany({ where: { volunteerId: id } }),
     prisma.volunteer.delete({ where: { id } }),
   ]);

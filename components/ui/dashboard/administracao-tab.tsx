@@ -13,7 +13,7 @@ interface Ministry {
   id: string;
   nome: string;
   descricao: string | null;
-  leader: { id: string; nome: string } | null;
+  leaders: { id: string; nome: string }[];
   _count: { volunteers: number; escalas: number };
 }
 
@@ -43,11 +43,11 @@ export function AdministracaoTab({
 
   const filteredSchedules = schedules.filter((schedule) => {
     const ministryId = schedule.ministry?.id || "SEM_MINISTERIO";
-    const leaderId = schedule.ministry?.leader?.id || "SEM_LIDER";
+    const leaderIds = (schedule.ministry?.leaders || []).map((leader: { id: string }) => leader.id);
     const month = new Date(schedule.event.dataHora).getMonth().toString();
     return (
       (ministryFilter === "TODOS" || ministryFilter === ministryId) &&
-      (leaderFilter === "TODOS" || leaderFilter === leaderId) &&
+      (leaderFilter === "TODOS" || leaderIds.includes(leaderFilter)) &&
       (monthFilter === "TODOS" || monthFilter === month)
     );
   });
@@ -166,7 +166,7 @@ export function AdministracaoTab({
               <div>
                 <strong>{ministry.nome}</strong>
                 <p className="text-xs text-slate-500">
-                  Líder: {ministry.leader?.nome || "Não definido"} ·{" "}
+                  Líderes: {ministry.leaders.map((leader) => leader.nome).join(", ") || "Não definido"} ·{" "}
                   {ministry._count.volunteers} voluntários ·{" "}
                   {ministry._count.escalas} escalas
                 </p>
@@ -243,7 +243,7 @@ export function AdministracaoTab({
               <p className="text-xs text-slate-500">
                 {new Date(schedule.event.dataHora).toLocaleDateString("pt-BR")}{" "}
                 · {schedule.ministry?.nome || "Sem ministério"} ·{" "}
-                {schedule.ministry?.leader?.nome || "Sem líder"} ·{" "}
+                {(schedule.ministry?.leaders || []).map((leader: { nome: string }) => leader.nome).join(", ") || "Sem líder"} ·{" "}
                 {schedule.status}
               </p>
             </div>

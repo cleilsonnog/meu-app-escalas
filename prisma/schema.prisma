@@ -37,8 +37,7 @@ model Ministry {
   clerkUserId String
   nome        String
   descricao   String?
-  leaderId    String?
-  leader      Volunteer?  @relation("MinistryLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  leaders     Volunteer[] @relation("MinistryLeaders")
   owner       UserSettings @relation(fields: [clerkUserId], references: [clerkUserId], onDelete: Cascade)
   volunteers  Volunteer[] @relation("VolunteerMinistries")
   escalas     Schedule[]
@@ -58,7 +57,7 @@ model Volunteer {
   email             String?
   departamento      String?
   ativo             Boolean    @default(true)
-  ledMinistries     Ministry[] @relation("MinistryLeader")
+  ledMinistries     Ministry[] @relation("MinistryLeaders")
   ministries        Ministry[] @relation("VolunteerMinistries")
   escalas           Schedule[]
 

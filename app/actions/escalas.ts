@@ -337,7 +337,7 @@ export async function responderEscala(
       include: {
         event: true,
         volunteer: true,
-        ministry: { include: { leader: true } },
+        ministry: { include: { leaders: true } },
       },
     });
 
@@ -360,7 +360,7 @@ export async function responderEscala(
         select: { telefoneLider: true },
       });
       const telefoneDestino =
-        schedule.ministry?.leader?.telefone ||
+        schedule.ministry?.leaders[0]?.telefone ||
         adminSettings?.telefoneLider ||
         process.env.ADMIN_WHATSAPP_PHONE;
 
