@@ -162,10 +162,12 @@ export async function criarVoluntario(formData: FormData) {
 
   const nome = formData.get("nome") as string;
   const telefone = formData.get("telefone") as string;
-  const departamento = formData.get("departamento") as string;
+  const email = (formData.get("email") as string)?.trim() || null;
+  const departamento =
+    (formData.get("departamento") as string)?.trim() || "Geral";
 
-  if (!nome || !telefone || !departamento) {
-    return { error: "Preencha todos os campos obrigatórios." };
+  if (!nome?.trim() || !telefone?.trim()) {
+    return { error: "Nome e telefone são obrigatórios." };
   }
 
   try {
@@ -174,6 +176,7 @@ export async function criarVoluntario(formData: FormData) {
         clerkUserId: access.ownerClerkUserId,
         nome,
         telefone,
+        email,
         departamento,
         ...(access.role === "LEADER" && access.ministryId
           ? { ministries: { connect: { id: access.ministryId } } }

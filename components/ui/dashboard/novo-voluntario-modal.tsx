@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { createVoluntario } from "@/app/actions/voluntarios";
 import { UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function NovoVoluntarioModal() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -23,6 +25,7 @@ export function NovoVoluntarioModal() {
     } else {
       setLoading(false);
       setIsOpen(false);
+      router.refresh();
     }
   }
 

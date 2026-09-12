@@ -3,14 +3,16 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
+import { getAccessContext } from "@/lib/access";
 
 export async function createVoluntario(formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
   const nome = (formData.get("nome") as string)?.trim();
   const telefone = (formData.get("telefone") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim() || null;
   const departamento = (formData.get("departamento") as string)?.trim();
 
-  if (!userId) {
+  if (!access) {
     return { error: "Usuário não autenticado." };
   }
 
@@ -21,10 +23,14 @@ export async function createVoluntario(formData: FormData) {
   try {
     await prisma.volunteer.create({
       data: {
-        clerkUserId: userId,
+        clerkUserId: access.ownerClerkUserId,
         nome,
         telefone,
         departamento: departamento || "Geral",
+        email,
+        ...(access.role === "LEADER" && access.ministryId
+          ? { ministries: { connect: { id: access.ministryId } } }
+          : {}),
       },
     });
 
