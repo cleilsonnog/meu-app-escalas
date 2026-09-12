@@ -37,7 +37,9 @@ export async function getAdministracao() {
       include: {
         volunteer: { select: { nome: true } },
         event: { select: { titulo: true, dataHora: true } },
-        ministry: { include: { leaders: { select: { id: true, nome: true } } } },
+        ministry: {
+          include: { leaders: { select: { id: true, nome: true } } },
+        },
       },
       orderBy: { event: { dataHora: "asc" } },
     }),
