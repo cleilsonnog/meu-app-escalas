@@ -7,12 +7,16 @@ export async function GET(
 ) {
   const payload = verifyScheduleToken(params.token);
   if (!payload) {
-    return NextResponse.json({ error: "Link inválido ou expirado." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Link inválido ou expirado." },
+      { status: 404 },
+    );
   }
 
-  const destination = payload.action === "PORTAL"
-    ? `/voluntario/${payload.volunteerId}`
-    : `/confirmar/${payload.scheduleId}`;
+  const destination =
+    payload.action === "PORTAL"
+      ? `/voluntario/${payload.volunteerId}`
+      : `/confirmar/${payload.scheduleId}`;
   const url = new URL(destination, req.url);
   url.searchParams.set("token", params.token);
   return NextResponse.rewrite(url);

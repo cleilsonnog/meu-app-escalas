@@ -4,7 +4,10 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import { generateCompactScheduleToken, verifyScheduleToken } from "@/lib/tokens";
+import {
+  generateCompactScheduleToken,
+  verifyScheduleToken,
+} from "@/lib/tokens";
 
 export async function gerarLinksNotificacao(scheduleId: string) {
   const { userId } = await auth();

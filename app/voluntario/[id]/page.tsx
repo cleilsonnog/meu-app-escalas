@@ -2,7 +2,10 @@
 import prisma from "@/lib/prisma";
 import { VoluntarioAgendaCliente } from "@/components/voluntario-agenda-cliente";
 import { Metadata } from "next";
-import { generateCompactScheduleToken, verifyScheduleToken } from "@/lib/tokens";
+import {
+  generateCompactScheduleToken,
+  verifyScheduleToken,
+} from "@/lib/tokens";
 
 export const metadata: Metadata = {
   title: "Minhas Escalas | Portal do Voluntário",

@@ -29,7 +29,11 @@ function bytesToUuid(value: Buffer): string {
 }
 
 function base64Url(value: Buffer): string {
-  return value.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return value
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 function fromBase64Url(value: string): Buffer {
@@ -40,7 +44,9 @@ export function generateCompactScheduleToken(
   payload: ScheduleTokenPayload,
   expiresIn: "48h" | "30d" = "48h",
 ): string {
-  const expiresAt = Math.floor(Date.now() / 1000) + (expiresIn === "30d" ? 30 : 2) * 24 * 60 * 60;
+  const expiresAt =
+    Math.floor(Date.now() / 1000) +
+    (expiresIn === "30d" ? 30 : 2) * 24 * 60 * 60;
   const expiration = Buffer.alloc(4);
   expiration.writeUInt32BE(expiresAt, 0);
   const body = Buffer.concat([
@@ -49,11 +55,16 @@ export function generateCompactScheduleToken(
     Buffer.from(ACTION_CODES[payload.action]),
     expiration,
   ]);
-  const signature = createHmac("sha256", JWT_SECRET).update(body).digest().subarray(0, COMPACT_SIGNATURE_LENGTH);
+  const signature = createHmac("sha256", JWT_SECRET)
+    .update(body)
+    .digest()
+    .subarray(0, COMPACT_SIGNATURE_LENGTH);
   return `${COMPACT_TOKEN_VERSION}.${base64Url(Buffer.concat([body, signature]))}`;
 }
 
-function verifyCompactScheduleToken(token: string): ScheduleTokenPayload | null {
+function verifyCompactScheduleToken(
+  token: string,
+): ScheduleTokenPayload | null {
   try {
     const [version, encoded] = token.split(".");
     if (version !== COMPACT_TOKEN_VERSION || !encoded) return null;
@@ -61,11 +72,17 @@ function verifyCompactScheduleToken(token: string): ScheduleTokenPayload | null 
     if (value.length !== 47) return null;
     const body = value.subarray(0, 37);
     const receivedSignature = value.subarray(37);
-    const expectedSignature = createHmac("sha256", JWT_SECRET).update(body).digest().subarray(0, COMPACT_SIGNATURE_LENGTH);
+    const expectedSignature = createHmac("sha256", JWT_SECRET)
+      .update(body)
+      .digest()
+      .subarray(0, COMPACT_SIGNATURE_LENGTH);
     if (!timingSafeEqual(receivedSignature, expectedSignature)) return null;
     const expiresAt = body.readUInt32BE(33);
     if (expiresAt < Math.floor(Date.now() / 1000)) return null;
-    const action = CODE_ACTIONS[body.subarray(32, 33).toString() as keyof typeof CODE_ACTIONS];
+    const action =
+      CODE_ACTIONS[
+        body.subarray(32, 33).toString() as keyof typeof CODE_ACTIONS
+      ];
     if (!action) return null;
     return {
       scheduleId: bytesToUuid(body.subarray(0, 16)),
