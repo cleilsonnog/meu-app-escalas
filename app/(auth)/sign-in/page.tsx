@@ -82,8 +82,6 @@ export default function SignInPage() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-950">
         <div className="w-full max-w-md flex justify-center">
           <SignIn
-            path="/sign-in"
-            routing="path"
             appearance={{
               elements: {
                 card: "bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl w-full",

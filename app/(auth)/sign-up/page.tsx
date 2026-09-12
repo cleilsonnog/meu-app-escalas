@@ -70,8 +70,7 @@ export default function SignUpPage() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-950">
         <div className="w-full max-w-md flex justify-center">
           <SignUp
-            path="/sign-up"
-            routing="path"
+            routing="hash"
             signInUrl="/sign-in"
             fallbackRedirectUrl="/dashboard"
             appearance={{
