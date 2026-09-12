@@ -205,7 +205,7 @@ export async function criarEscala(formData: FormData) {
     const evento = await prisma.event.create({
       data: {
         titulo: tituloEvento,
-        dataHora: new Date(dataHora),
+        dataHora: new Date(`${dataHora}:00-03:00`),
         clerkUserId: userId,
       },
     });

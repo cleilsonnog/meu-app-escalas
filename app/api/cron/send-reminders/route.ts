@@ -28,13 +28,26 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 2. Intervalo do dia seguinte (Fuso Horário de Brasília)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-
-  const endOfTomorrow = new Date(tomorrow);
-  endOfTomorrow.setHours(23, 59, 59, 999);
+  // 2. Intervalo do dia seguinte no fuso de Brasília, independentemente do fuso da Vercel
+  const brazilTodayParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const brazilToday = Object.fromEntries(
+    brazilTodayParts.map(({ type, value }) => [type, value]),
+  );
+  const nextDay = new Date(
+    Date.UTC(
+      Number(brazilToday.year),
+      Number(brazilToday.month) - 1,
+      Number(brazilToday.day) + 1,
+    ),
+  );
+  const tomorrowDate = nextDay.toISOString().slice(0, 10);
+  const tomorrow = new Date(`${tomorrowDate}T00:00:00-03:00`);
+  const endOfTomorrow = new Date(`${tomorrowDate}T23:59:59.999-03:00`);
 
   // 3. Busca escalas PENDENTES e CONFIRMADAS para amanhã
   const activeSchedules = await prisma.schedule.findMany({
@@ -59,6 +72,13 @@ export async function GET(req: NextRequest) {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "")
     .trim()
     .replace(/\/$/, "");
+
+  if (!appUrl) {
+    return NextResponse.json(
+      { error: "NEXT_PUBLIC_APP_URL não configurada." },
+      { status: 500 },
+    );
+  }
 
   // 4. Busca os nomes das Igrejas/Ministérios para os eventos encontrados
   const clerkUserIds = [
@@ -181,10 +201,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const successCount = results.filter((r) => r.status === "fulfilled").length;
+  const failureCount = results.filter((r) => r.status === "rejected").length;
+
   return NextResponse.json({
+    tomorrowStart: tomorrow.toISOString(),
+    tomorrowEnd: endOfTomorrow.toISOString(),
     totalFound: activeSchedules.length,
     processedCount: validSchedules.length,
-    successCount: results.filter((r) => r.status === "fulfilled").length,
-    failureCount: results.filter((r) => r.status === "rejected").length,
+    successCount,
+    failureCount,
+    failures: results.flatMap((result) =>
+      result.status === "rejected"
+        ? [result.reason instanceof Error ? result.reason.message : String(result.reason)]
+        : [],
+    ),
   });
 }
