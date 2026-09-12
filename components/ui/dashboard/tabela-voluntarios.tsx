@@ -7,7 +7,7 @@ interface Volunteer {
   id: string;
   nome: string;
   telefone: string;
-  departamento: string;
+  departamento?: string | null;
 }
 
 interface Props {
@@ -23,7 +23,7 @@ export function TabelaVoluntarios({ voluntarios }: Props) {
   const listaFiltrada = voluntarios.filter(
     (v) =>
       v.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      v.departamento.toLowerCase().includes(busca.toLowerCase()) ||
+      (v.departamento || "Geral").toLowerCase().includes(busca.toLowerCase()) ||
       v.telefone.includes(busca),
   );
 
@@ -107,7 +107,7 @@ export function TabelaVoluntarios({ voluntarios }: Props) {
                   </td>
                   <td className="p-4">
                     <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md">
-                      {vol.departamento}
+                      {vol.departamento || "Geral"}
                     </span>
                   </td>
                   <td className="p-4 text-right space-x-2">
@@ -172,7 +172,7 @@ export function TabelaVoluntarios({ voluntarios }: Props) {
                 <input
                   type="text"
                   name="departamento"
-                  defaultValue={voluntarioEditando.departamento}
+                  defaultValue={voluntarioEditando.departamento || "Geral"}
                   className="w-full p-2 text-sm border rounded bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>

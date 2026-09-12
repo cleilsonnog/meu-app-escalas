@@ -1,0 +1,4 @@
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'LEADER');
+
+ALTER TABLE "UserSettings"
+  ADD COLUMN "role" "UserRole" NOT NULL DEFAULT 'ADMIN';

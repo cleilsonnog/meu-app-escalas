@@ -11,11 +11,19 @@ datasource db {
 
 // Tabela de Configurações do Usuário
 model UserSettings {
-  id          String   @id @default(uuid())
-  clerkUserId String   @unique
-  churchName  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  clerkUserId   String   @unique
+  churchName    String
+  role          UserRole @default(ADMIN)
+  telefoneLider String?
+  ministries    Ministry[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  LEADER
 }
 // Enum para o status da escala
 enum StatusEscala {
@@ -24,17 +32,35 @@ enum StatusEscala {
   RECUSADO
 }
 
+model Ministry {
+  id          String      @id @default(uuid())
+  clerkUserId String
+  nome        String
+  descricao   String?
+  leaderId    String?
+  leader      Volunteer?  @relation("MinistryLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  owner       UserSettings @relation(fields: [clerkUserId], references: [clerkUserId], onDelete: Cascade)
+  volunteers  Volunteer[] @relation("VolunteerMinistries")
+  escalas     Schedule[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([clerkUserId])
+}
+
 // Tabela de Voluntários
 model Volunteer {
-  id           String     @id @default(uuid())
-  clerkUserId  String     // ID do Líder/Admin dono do registro (SEM @unique!)
-  nome         String
-  telefone     String     // Essencial para o alerta no WhatsApp
-  departamento String     // ex: Louvor, Mídia, Recepção
-  ativo        Boolean    @default(true)
-  
-  // Relacionamento: Um voluntário pode ter várias escalas
-  escalas      Schedule[]
+  id                String     @id @default(uuid())
+  clerkUserId       String     // Conta administradora dona do registro
+  accessClerkUserId String?    @unique // Conta Clerk vinculada ao líder, quando existir
+  nome              String
+  telefone          String
+  email             String?
+  departamento      String?
+  ativo             Boolean    @default(true)
+  ledMinistries     Ministry[] @relation("MinistryLeader")
+  ministries        Ministry[] @relation("VolunteerMinistries")
+  escalas           Schedule[]
 
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -66,10 +92,12 @@ model Schedule {
   // Chaves estrangeiras
   volunteerId String
   eventId     String
+  ministryId  String?
 
   // Relacionamentos
   volunteer   Volunteer    @relation(fields: [volunteerId], references: [id])
   event       Event        @relation(fields: [eventId], references: [id])
+  ministry    Ministry?    @relation(fields: [ministryId], references: [id], onDelete: SetNull)
 
   funcaoEspecífica String  // ex: Baterista, Câmera 1, Porta Principal
   observacao       String?     // Observações adicionais, se houver
@@ -80,4 +108,5 @@ model Schedule {
 
   // Garante que a mesma pessoa não seja escalada duas vezes na mesma função no mesmo culto
   @@unique([volunteerId, eventId, funcaoEspecífica])
+  @@index([ministryId])
 }

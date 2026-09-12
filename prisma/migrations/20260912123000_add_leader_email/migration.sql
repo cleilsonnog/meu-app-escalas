@@ -1,0 +1,1 @@
+ALTER TABLE "Volunteer" ADD COLUMN "email" TEXT;

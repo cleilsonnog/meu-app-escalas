@@ -4,17 +4,24 @@ import { useState } from "react";
 import { ListaEscalasFiltrada } from "./lista-escalas-filtrada";
 import { TabelaVoluntarios } from "./tabela-voluntarios";
 import { RelatoriosVoluntarios } from "../../relatorios-voluntarios"; // 👈 Import da nova aba
+import { AdministracaoTab } from "./administracao-tab";
 
 interface Props {
   escalas: any[];
   voluntarios: any[];
   nomeIgreja?: string;
+  administracao?: { ministries: any[]; leaders: any[]; schedules: any[] };
 }
 
-export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
+export function DashboardTabs({
+  escalas,
+  voluntarios,
+  nomeIgreja,
+  administracao,
+}: Props) {
   // 1. Atualizado para aceitar a 3ª aba 'relatorios'
   const [abaAtiva, setAbaAtiva] = useState<
-    "escalas" | "voluntarios" | "relatorios"
+    "escalas" | "voluntarios" | "relatorios" | "administracao"
   >("escalas");
 
   // 👈 CONTA APENAS CULTOS/EVENTOS ÚNICOS
@@ -90,6 +97,19 @@ export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
           📋 Painel de Cultos/Eventos ({totalEventos})
         </button>
 
+        {administracao && (
+          <button
+            onClick={() => setAbaAtiva("administracao")}
+            className={`px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
+              abaAtiva === "administracao"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            ⚙️ Administração
+          </button>
+        )}
+
         {/* ABA 2: VOLUNTÁRIOS */}
         <button
           onClick={() => setAbaAtiva("voluntarios")}
@@ -134,6 +154,10 @@ export function DashboardTabs({ escalas, voluntarios, nomeIgreja }: Props) {
           resumo={resumoRelatorio}
           sobrecarregados={sobrecarregados}
         />
+      )}
+
+      {abaAtiva === "administracao" && administracao && (
+        <AdministracaoTab {...administracao} />
       )}
     </div>
   );

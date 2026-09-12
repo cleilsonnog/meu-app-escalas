@@ -8,6 +8,7 @@ import {
   generateCompactScheduleToken,
   verifyScheduleToken,
 } from "@/lib/tokens";
+import { getAccessContext } from "@/lib/access";
 
 export async function gerarLinksNotificacao(scheduleId: string) {
   const { userId } = await auth();
@@ -42,22 +43,27 @@ export async function gerarLinksNotificacao(scheduleId: string) {
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
-  const { userId } = await auth();
+  const access = await getAccessContext();
 
-  if (!userId) {
+  if (!access) {
     return { data: [] };
   }
 
   try {
     const eventos = await prisma.event.findMany({
       where: {
-        clerkUserId: userId, // 👈 ISOLAMENTO: Só traz os cultos criados por este usuário
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { escalas: { some: { ministryId: access.ministryId } } }
+          : {}),
       },
       include: {
         escalas: {
-          include: {
-            volunteer: true,
-          },
+          where:
+            access.role === "LEADER"
+              ? { ministryId: access.ministryId }
+              : undefined,
+          include: { volunteer: true, ministry: true },
         },
       },
       orderBy: {
@@ -85,16 +91,19 @@ export async function getEscalas() {
 
 // 2. Buscar lista de voluntários (para preencher o Select do formulário)
 export async function getVoluntarios() {
-  const { userId } = await auth();
+  const access = await getAccessContext();
 
-  if (!userId) {
+  if (!access) {
     return { data: [] };
   }
 
   try {
     const voluntarios = await prisma.volunteer.findMany({
       where: {
-        clerkUserId: userId, // 👈 ISOLAMENTO: Só traz os voluntários do usuário logado
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { ministries: { some: { id: access.ministryId } } }
+          : {}),
       },
       orderBy: {
         nome: "asc",
@@ -110,9 +119,9 @@ export async function getVoluntarios() {
 
 // CRIAR CULTO / EVENTO (Tratando Fuso Horário)
 export async function criarEvento(formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
 
-  if (!userId) {
+  if (!access) {
     return { error: "Não autorizado" };
   }
 
@@ -131,7 +140,7 @@ export async function criarEvento(formData: FormData) {
       data: {
         titulo,
         dataHora: dataComFuso,
-        clerkUserId: userId,
+        clerkUserId: access.ownerClerkUserId,
       },
     });
 
@@ -145,9 +154,9 @@ export async function criarEvento(formData: FormData) {
 
 // 3. Criar novo voluntário
 export async function criarVoluntario(formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
 
-  if (!userId) {
+  if (!access) {
     return { error: "Acesso negado. Faça login para cadastrar um voluntário." };
   }
 
@@ -162,10 +171,13 @@ export async function criarVoluntario(formData: FormData) {
   try {
     await prisma.volunteer.create({
       data: {
-        clerkUserId: userId,
+        clerkUserId: access.ownerClerkUserId,
         nome,
         telefone,
         departamento,
+        ...(access.role === "LEADER" && access.ministryId
+          ? { ministries: { connect: { id: access.ministryId } } }
+          : {}),
       },
     });
 
@@ -180,9 +192,9 @@ export async function criarVoluntario(formData: FormData) {
 
 // 4. Criar um novo evento com a primeira pessoa escalada
 export async function criarEscala(formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
 
-  if (!userId) {
+  if (!access) {
     return { error: "Acesso negado. Faça login para criar uma escala." };
   }
 
@@ -197,7 +209,13 @@ export async function criarEscala(formData: FormData) {
 
   try {
     const volunteer = await prisma.volunteer.findFirst({
-      where: { id: volunteerId, clerkUserId: userId },
+      where: {
+        id: volunteerId,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { ministries: { some: { id: access.ministryId } } }
+          : {}),
+      },
       select: { id: true },
     });
     if (!volunteer) {
@@ -209,7 +227,7 @@ export async function criarEscala(formData: FormData) {
       data: {
         titulo: tituloEvento,
         dataHora: new Date(`${dataHora}:00-03:00`),
-        clerkUserId: userId,
+        clerkUserId: access.ownerClerkUserId,
       },
     });
 
@@ -219,6 +237,10 @@ export async function criarEscala(formData: FormData) {
         volunteerId: volunteerId,
         funcaoEspecífica: funcaoEspecifica,
         status: "PENDENTE",
+        ministryId:
+          access.role === "LEADER"
+            ? access.ministryId
+            : (formData.get("ministryId") as string) || null,
       },
     });
 
@@ -233,12 +255,12 @@ export async function criarEscala(formData: FormData) {
 
 // 5. Adicionar um novo voluntário a um evento JÁ EXISTENTE
 export async function adicionarVoluntarioAoEvento(formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
   const eventId = formData.get("eventId") as string;
   const volunteerId = formData.get("volunteerId") as string;
   const funcaoEspecifica = formData.get("funcaoEspecifica") as string;
 
-  if (!userId) {
+  if (!access) {
     return { error: "Acesso negado." };
   }
 
@@ -249,11 +271,23 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
   try {
     const [event, volunteer] = await Promise.all([
       prisma.event.findFirst({
-        where: { id: eventId, clerkUserId: userId },
+        where: {
+          id: eventId,
+          clerkUserId: access.ownerClerkUserId,
+          ...(access.role === "LEADER"
+            ? { escalas: { some: { ministryId: access.ministryId } } }
+            : {}),
+        },
         select: { id: true },
       }),
       prisma.volunteer.findFirst({
-        where: { id: volunteerId, clerkUserId: userId },
+        where: {
+          id: volunteerId,
+          clerkUserId: access.ownerClerkUserId,
+          ...(access.role === "LEADER"
+            ? { ministries: { some: { id: access.ministryId } } }
+            : {}),
+        },
         select: { id: true },
       }),
     ]);
@@ -267,6 +301,7 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
         volunteerId: volunteerId,
         funcaoEspecífica: funcaoEspecifica,
         status: "PENDENTE",
+        ministryId: access.role === "LEADER" ? access.ministryId : null,
       },
     });
 
@@ -302,6 +337,7 @@ export async function responderEscala(
       include: {
         event: true,
         volunteer: true,
+        ministry: { include: { leader: true } },
       },
     });
 
@@ -319,8 +355,14 @@ export async function responderEscala(
 
     // 2. Se for RECUSADO, envia notificação no WhatsApp da liderança
     if (novoStatus === "RECUSADO") {
-      // Usa o número do administrador/líder vindo das variáveis de ambiente
-      const telefoneDestino = process.env.ADMIN_WHATSAPP_PHONE;
+      const adminSettings = await prisma.userSettings.findUnique({
+        where: { clerkUserId: schedule.event.clerkUserId },
+        select: { telefoneLider: true },
+      });
+      const telefoneDestino =
+        schedule.ministry?.leader?.telefone ||
+        adminSettings?.telefoneLider ||
+        process.env.ADMIN_WHATSAPP_PHONE;
 
       if (telefoneDestino) {
         let dataHoraTexto = "Horário não informado";

@@ -25,7 +25,7 @@ interface ScheduleItem {
 interface VolunteerItem {
   id: string;
   nome: string;
-  departamento?: string;
+  departamento?: string | null;
 }
 
 interface Props {

@@ -6,9 +6,15 @@ import { salvarIgrejaName } from "@/app/actions/configuracoes";
 
 interface Props {
   nomeInicial: string;
+  ministerio?: string;
+  podeEditar?: boolean;
 }
 
-export function TituloIgreja({ nomeInicial }: Props) {
+export function TituloIgreja({
+  nomeInicial,
+  ministerio,
+  podeEditar = true,
+}: Props) {
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(nomeInicial);
   const [tempNome, setTempNome] = useState(nomeInicial);
@@ -58,17 +64,24 @@ export function TituloIgreja({ nomeInicial }: Props) {
         ) : (
           ""
         )}
+        {ministerio && (
+          <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 sm:text-base">
+            Ministério: {ministerio}
+          </span>
+        )}
       </h1>
-      <button
-        onClick={() => {
-          setTempNome(nome);
-          setEditando(true);
-        }}
-        title="Editar nome da igreja/ministério"
-        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>
+      {podeEditar && (
+        <button
+          onClick={() => {
+            setTempNome(nome);
+            setEditando(true);
+          }}
+          title="Editar nome da igreja/ministério"
+          className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

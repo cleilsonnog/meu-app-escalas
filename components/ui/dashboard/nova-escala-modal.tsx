@@ -24,7 +24,7 @@ import { criarEscala } from "@/app/actions/escalas";
 interface Voluntario {
   id: string;
   nome: string;
-  departamento: string;
+  departamento?: string | null;
 }
 
 export function NovaEscalaModal({

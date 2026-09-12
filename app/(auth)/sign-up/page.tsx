@@ -3,7 +3,11 @@ import { SignUp } from "@clerk/nextjs";
 export default function SignUpPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-      <SignUp routing="hash" signInUrl="/sign-in" />
+      <SignUp
+        routing="hash"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl="/dashboard"
+      />
     </div>
   );
 }

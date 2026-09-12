@@ -33,7 +33,7 @@ interface ScheduleItem {
 interface VoluntarioOption {
   id: string;
   nome: string;
-  departamento?: string;
+  departamento?: string | null;
 }
 
 interface EscalaCardProps {

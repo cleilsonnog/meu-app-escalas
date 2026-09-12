@@ -9,6 +9,8 @@ import { ListaEscalasFiltrada } from "@/components/ui/dashboard/lista-escalas-fi
 import { getEscalas, getVoluntarios } from "@/app/actions/escalas";
 import { getIgrejaName } from "@/app/actions/configuracoes";
 import { TituloIgreja } from "@/components/ui/dashboard/titulo-igreja";
+import { getAccessContext } from "@/lib/access";
+import { getAdministracao } from "@/app/actions/administracao";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -17,12 +19,30 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const [{ data: escalas }, { data: voluntarios }, nomeIgreja] =
-    await Promise.all([getEscalas(), getVoluntarios(), getIgrejaName()]);
+  const access = await getAccessContext();
+  const [{ data: escalas }, { data: voluntarios }, nomeIgreja, administracao] =
+    await Promise.all([
+      getEscalas(),
+      getVoluntarios(),
+      getIgrejaName(),
+      access?.role === "ADMIN" ? getAdministracao() : Promise.resolve(null),
+    ]);
 
   const listaEscalas = escalas || [];
   const listaVoluntarios = voluntarios || [];
   const igrejaName = await getIgrejaName();
+  const dadosAdministracao =
+    administracao &&
+    !administracao.error &&
+    Array.isArray(administracao.ministries) &&
+    Array.isArray(administracao.leaders) &&
+    Array.isArray(administracao.schedules)
+      ? {
+          ministries: administracao.ministries,
+          leaders: administracao.leaders,
+          schedules: administracao.schedules,
+        }
+      : undefined;
 
   return (
     <div className="flex flex-col min-h-screen p-4 sm:p-8 bg-slate-50 dark:bg-slate-950">
@@ -31,7 +51,15 @@ export default async function DashboardPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             {/* 2. Substitui o <h1> pelo componente interativo */}
-            <TituloIgreja nomeInicial={nomeIgreja} />
+            <TituloIgreja
+              nomeInicial={nomeIgreja}
+              ministerio={
+                access?.role === "LEADER"
+                  ? access.ministryName
+                  : dadosAdministracao?.ministries[0]?.nome
+              }
+              podeEditar={access?.role === "ADMIN"}
+            />
 
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
               Gerencie cultos, escalas e voluntários do seu ministério.
@@ -65,6 +93,7 @@ export default async function DashboardPage() {
           escalas={listaEscalas}
           voluntarios={listaVoluntarios}
           nomeIgreja={igrejaName}
+          administracao={dadosAdministracao}
         />
       </main>
     </div>
