@@ -29,7 +29,8 @@ export function verifyScheduleToken(
       return null;
     }
 
-    const { scheduleId, volunteerId, action } = payload as Partial<ScheduleTokenPayload>;
+    const { scheduleId, volunteerId, action } =
+      payload as Partial<ScheduleTokenPayload>;
     if (
       typeof scheduleId !== "string" ||
       typeof volunteerId !== "string" ||
@@ -38,7 +39,11 @@ export function verifyScheduleToken(
       return null;
     }
 
-    return { scheduleId, volunteerId, action: action as ScheduleTokenPayload["action"] };
+    return {
+      scheduleId,
+      volunteerId,
+      action: action as ScheduleTokenPayload["action"],
+    };
   } catch {
     return null;
   }

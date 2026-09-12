@@ -214,8 +214,14 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
 
   try {
     const [event, volunteer] = await Promise.all([
-      prisma.event.findFirst({ where: { id: eventId, clerkUserId: userId }, select: { id: true } }),
-      prisma.volunteer.findFirst({ where: { id: volunteerId, clerkUserId: userId }, select: { id: true } }),
+      prisma.event.findFirst({
+        where: { id: eventId, clerkUserId: userId },
+        select: { id: true },
+      }),
+      prisma.volunteer.findFirst({
+        where: { id: volunteerId, clerkUserId: userId },
+        select: { id: true },
+      }),
     ]);
     if (!event || !volunteer) {
       return { error: "Evento ou voluntário não pertence a este usuário." };

@@ -97,7 +97,7 @@ export default async function ConfirmarEscalaPage({
   return (
     <ConfirmarCliente
       scheduleId={schedule.id}
-        token={token}
+      token={token}
       statusInicial={schedule.status}
       observacaoInicial={schedule.observacao || ""}
       eventoTitulo={schedule.event?.titulo || "Culto"}
