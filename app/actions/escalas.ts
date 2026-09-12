@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
+import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 // 1. Buscar as escalas do próximo culto
 export async function getEscalas() {
@@ -223,14 +224,64 @@ export async function responderEscala(
   observacao?: string,
 ) {
   try {
-    await prisma.schedule.update({
+    // 1. Atualiza no banco e traz as relações de Evento e Voluntário
+    const schedule = await prisma.schedule.update({
       where: { id },
-      data: { status: novoStatus, observacao: observacao?.trim() || null },
+      data: {
+        status: novoStatus,
+        observacao: observacao?.trim() || null,
+      },
+      include: {
+        event: true,
+        volunteer: true,
+      },
     });
 
+    // 2. Se for RECUSADO, envia notificação no WhatsApp da liderança
+    if (novoStatus === "RECUSADO") {
+      // Usa o número do administrador/líder vindo das variáveis de ambiente
+      const telefoneDestino = process.env.ADMIN_WHATSAPP_PHONE;
+
+      if (telefoneDestino) {
+        let dataHoraTexto = "Horário não informado";
+        if (schedule.event.dataHora) {
+          const dateObj = new Date(schedule.event.dataHora);
+          dataHoraTexto = dateObj.toLocaleDateString("pt-BR", {
+            weekday: "short",
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "America/Sao_Paulo",
+          });
+        }
+
+        const motivoTexto = observacao?.trim()
+          ? `"${observacao.trim()}"`
+          : "Nenhum motivo informado";
+        const funcao = schedule.funcaoEspecífica || "Serviço Geral";
+
+        const mensagemLider =
+          `⚠️ *ALERTA DE DESISTÊNCIA / IMPREVISTO*\n\n` +
+          `O voluntário *${schedule.volunteer.nome}* informou que *NÃO poderá ir* ao culto.\n\n` +
+          `📌 *Culto:* ${schedule.event.titulo}\n` +
+          `📅 *Data/Hora:* ${dataHoraTexto}\n` +
+          `🛠️ *Função:* ${funcao}\n` +
+          `💬 *Motivo:* ${motivoTexto}\n\n` +
+          `🔄 Por favor, acesse o painel para escalar um substituto.`;
+
+        await sendWhatsAppMessage({
+          phone: telefoneDestino,
+          message: mensagemLider,
+        });
+      }
+    }
+
+    // 3. Revalida as páginas do Next.js
     revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath(`/confirmar/${id}`);
+
     return { success: true };
   } catch (error) {
     console.error("Erro ao atualizar status da escala:", error);

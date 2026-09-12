@@ -186,9 +186,15 @@ export function ConfirmarCliente({
             <button
               type="button"
               onClick={() => setModoEdicao(true)}
-              className="w-full text-xs text-center text-slate-500 hover:text-red-600 underline transition py-1"
+              className="w-full py-3.5 px-4 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 border-2 border-amber-300/80 dark:border-amber-700/60 rounded-2xl font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98]"
             >
-              Teve algum imprevisto de última hora? Clique aqui para avisar.
+              <span className="text-base">⚠️</span>
+              <span>
+                Teve algum imprevisto?{" "}
+                <strong className="font-bold underline decoration-amber-500 underline-offset-2">
+                  Clique para avisar a liderança
+                </strong>
+              </span>
             </button>
           </div>
         ) : (
