@@ -14,7 +14,9 @@ export default function SignUpPage() {
           <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
             <CalendarCheck2 className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight">Gestão de Escalas</span>
+          <span className="text-xl font-bold tracking-tight">
+            Gestão de Escalas
+          </span>
         </div>
 
         <div className="my-10 lg:my-auto max-w-lg space-y-6">
@@ -26,7 +28,8 @@ export default function SignUpPage() {
             Comece a organizar suas escalas.
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-            Crie sua conta para gerenciar cultos, ministérios e voluntários em um só lugar.
+            Crie sua conta para gerenciar cultos, ministérios e voluntários em
+            um só lugar.
           </p>
           <div className="space-y-4 pt-4">
             <div className="flex items-start gap-3">
@@ -34,8 +37,12 @@ export default function SignUpPage() {
                 <MessageSquare className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-200">Notificações via WhatsApp</h3>
-                <p className="text-xs text-slate-400">Envie escalas e links de confirmação aos voluntários.</p>
+                <h3 className="text-sm font-semibold text-slate-200">
+                  Notificações via WhatsApp
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Envie escalas e links de confirmação aos voluntários.
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -43,14 +50,21 @@ export default function SignUpPage() {
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-200">Gestão segura</h3>
-                <p className="text-xs text-slate-400">Cada ministério acessa somente os próprios dados.</p>
+                <h3 className="text-sm font-semibold text-slate-200">
+                  Gestão segura
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Cada ministério acessa somente os próprios dados.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-slate-500">© {new Date().getFullYear()} Gestão de Escalas. Todos os direitos reservados.</div>
+        <div className="text-xs text-slate-500">
+          © {new Date().getFullYear()} Gestão de Escalas. Todos os direitos
+          reservados.
+        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-950">
@@ -64,13 +78,17 @@ export default function SignUpPage() {
                 card: "bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl w-full",
                 headerTitle: "text-white font-bold text-xl",
                 headerSubtitle: "text-slate-400 text-sm",
-                formButtonPrimary: "bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/20",
+                formButtonPrimary:
+                  "bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/20",
                 formFieldLabel: "text-slate-300 font-medium text-xs",
-                formFieldInput: "bg-slate-800 border-slate-700 text-white rounded-xl text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500",
-                footerActionLink: "text-indigo-400 hover:text-indigo-300 font-medium",
+                formFieldInput:
+                  "bg-slate-800 border-slate-700 text-white rounded-xl text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500",
+                footerActionLink:
+                  "text-indigo-400 hover:text-indigo-300 font-medium",
                 dividerLine: "bg-slate-800",
                 dividerText: "text-slate-500 text-xs",
-                socialButtonsBlockButton: "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200 rounded-xl",
+                socialButtonsBlockButton:
+                  "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200 rounded-xl",
                 socialButtonsBlockButtonText: "font-medium text-xs",
               },
             }}
