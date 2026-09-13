@@ -1,1 +1,14 @@
-export { default } from "./dashboard/page";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+export default async function HomePage() {
+  const { userId } = await auth();
+
+  if (userId) {
+    redirect("/dashboard");
+  }
+
+  redirect("/sign-in");
+}
+
+//export { default } from "./dashboard/page";
