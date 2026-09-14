@@ -1,26 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import prisma from "@/lib/prisma";
+
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+
 import { generateCompactScheduleToken } from "@/lib/tokens";
+
 import { StatusEscala } from "@prisma/client";
 
 export const maxDuration = 60;
 
-// Helper para criar atrasos assíncronos
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const CONCURRENCY_LIMIT = 3;
 
-// Helper para fatiar o array em lotes
-function chunkArray<T>(array: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
+/**
+ * Executa as tarefas mantendo no máximo 3 envios simultâneos.
+ *
+ * Quando uma mensagem termina, a próxima entra imediatamente.
+ */
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  handler: (item: T, index: number) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = new Array(items.length);
+
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const currentIndex = nextIndex++;
+
+      if (currentIndex >= items.length) {
+        return;
+      }
+
+      try {
+        const value = await handler(items[currentIndex], currentIndex);
+
+        results[currentIndex] = {
+          status: "fulfilled",
+          value,
+        };
+      } catch (reason) {
+        results[currentIndex] = {
+          status: "rejected",
+          reason,
+        };
+      }
+    }
   }
-  return chunks;
+
+  const workers = Array.from(
+    {
+      length: Math.min(limit, items.length),
+    },
+    () => worker(),
+  );
+
+  await Promise.all(workers);
+
+  return results;
 }
 
 export async function GET(req: NextRequest) {
   // 1. Validação do token de segurança do Cron
+
   const authHeader = req.headers.get("authorization");
+
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json(
       { error: "Acesso não autorizado." },
@@ -28,140 +74,172 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 2. Intervalo do dia seguinte no fuso de Brasília, independentemente do fuso da Vercel
-  const brazilTodayParts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const brazilToday = Object.fromEntries(
-    brazilTodayParts.map(({ type, value }) => [type, value]),
-  );
-  const nextDay = new Date(
-    Date.UTC(
-      Number(brazilToday.year),
-      Number(brazilToday.month) - 1,
-      Number(brazilToday.day) + 1,
-    ),
-  );
-  const tomorrowDate = nextDay.toISOString().slice(0, 10);
-  const tomorrow = new Date(`${tomorrowDate}T00:00:00-03:00`);
-  const endOfTomorrow = new Date(`${tomorrowDate}T23:59:59.999-03:00`);
+  try {
+    // 2. Intervalo do dia seguinte no fuso de Brasília
 
-  // 3. Busca escalas PENDENTES e CONFIRMADAS para amanhã
-  const activeSchedules = await prisma.schedule.findMany({
-    where: {
-      status: {
-        in: [StatusEscala.PENDENTE, StatusEscala.CONFIRMADO],
-      },
-      event: {
-        dataHora: {
-          gte: tomorrow,
-          lte: endOfTomorrow,
+    const brazilTodayParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+
+    const brazilToday = Object.fromEntries(
+      brazilTodayParts.map(({ type, value }) => [type, value]),
+    );
+
+    const nextDay = new Date(
+      Date.UTC(
+        Number(brazilToday.year),
+        Number(brazilToday.month) - 1,
+        Number(brazilToday.day) + 1,
+      ),
+    );
+
+    const tomorrowDate = nextDay.toISOString().slice(0, 10);
+
+    const tomorrow = new Date(`${tomorrowDate}T00:00:00-03:00`);
+
+    const endOfTomorrow = new Date(`${tomorrowDate}T23:59:59.999-03:00`);
+
+    // 3. Busca escalas pendentes e confirmadas
+
+    const activeSchedules = await prisma.schedule.findMany({
+      where: {
+        status: {
+          in: [StatusEscala.PENDENTE, StatusEscala.CONFIRMADO],
+        },
+
+        event: {
+          dataHora: {
+            gte: tomorrow,
+            lte: endOfTomorrow,
+          },
         },
       },
-    },
-    include: {
-      volunteer: true,
-      event: true,
-    },
-  });
 
-  // Sanitiza a URL base
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "")
-    .trim()
-    .replace(/\/$/, "");
+      include: {
+        volunteer: true,
+        event: true,
+      },
+    });
 
-  if (!appUrl) {
-    return NextResponse.json(
-      { error: "NEXT_PUBLIC_APP_URL não configurada." },
-      { status: 500 },
+    // Sanitiza a URL base
+
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "")
+      .trim()
+      .replace(/\/$/, "");
+
+    if (!appUrl) {
+      return NextResponse.json(
+        {
+          error: "NEXT_PUBLIC_APP_URL não configurada.",
+        },
+        { status: 500 },
+      );
+    }
+
+    // 4. Busca nomes das igrejas/ministérios
+
+    const clerkUserIds = [
+      ...new Set(
+        activeSchedules
+          .map((schedule) => schedule.event?.clerkUserId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+
+    const userSettings = await prisma.userSettings.findMany({
+      where: {
+        clerkUserId: {
+          in: clerkUserIds,
+        },
+      },
+
+      select: {
+        clerkUserId: true,
+        churchName: true,
+      },
+    });
+
+    const churchNameMap = new Map(
+      userSettings.map((setting) => [setting.clerkUserId, setting.churchName]),
     );
-  }
 
-  // 4. Busca os nomes das Igrejas/Ministérios para os eventos encontrados
-  const clerkUserIds = [
-    ...new Set(
-      activeSchedules
-        .map((s) => s.event?.clerkUserId)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  ];
+    // 5. Filtra voluntários com telefone válido
 
-  const userSettings = await prisma.userSettings.findMany({
-    where: { clerkUserId: { in: clerkUserIds } },
-    select: { clerkUserId: true, churchName: true },
-  });
+    const validSchedules = activeSchedules.filter(
+      (item) =>
+        item.volunteer &&
+        item.volunteer.telefone &&
+        item.volunteer.telefone.trim().length > 0,
+    );
 
-  const churchNameMap = new Map(
-    userSettings.map((s) => [s.clerkUserId, s.churchName]),
-  );
+    // 6. Envio com concorrência controlada
 
-  // 5. Filtra voluntários com telefone cadastrado
-  const validSchedules = activeSchedules.filter(
-    (item) => item.volunteer && item.volunteer.telefone,
-  );
-
-  // 6. Configuração dos Lotes
-  const BATCH_SIZE = 4;
-  const DELAY_BETWEEN_BATCHES_MS = 1200; // 1.2 segundos de pausa entre lotes
-
-  const batches = chunkArray(validSchedules, BATCH_SIZE);
-  const results: PromiseSettledResult<any>[] = [];
-
-  // Disparo controlado em lotes
-  for (let i = 0; i < batches.length; i++) {
-    const batch = batches[i];
-
-    const batchResults = await Promise.allSettled(
-      batch.map(async (item) => {
+    const results = await runWithConcurrency(
+      validSchedules,
+      CONCURRENCY_LIMIT,
+      async (item, index) => {
         const funcao = item.funcaoEspecífica || "Serviço Geral";
+
         const nomeIgreja =
           churchNameMap.get(item.event.clerkUserId || "") || "Sua Igreja";
 
-        // Formatação da data e hora (ex: "sáb., 12/09, 13:00")
+        // Formatação da data e hora
+
         let dataHoraTexto = "Horário não informado";
+
         if (item.event.dataHora) {
           const dateObj = new Date(item.event.dataHora);
+
           const dataFormatada = dateObj.toLocaleDateString("pt-BR", {
             weekday: "short",
             day: "2-digit",
             month: "2-digit",
             timeZone: "America/Sao_Paulo",
           });
+
           const horaFormatada = dateObj.toLocaleTimeString("pt-BR", {
             hour: "2-digit",
             minute: "2-digit",
             timeZone: "America/Sao_Paulo",
           });
+
           dataHoraTexto = `${dataFormatada}, ${horaFormatada}`;
         }
 
-        // Links diretos
+        // Token de confirmação
+
         const confirmToken = generateCompactScheduleToken({
           scheduleId: item.id,
-          volunteerId: item.volunteer.id,
+          volunteerId: item.volunteer!.id,
           action: "CONFIRM",
         });
+
+        // Token do portal
+
         const portalToken = generateCompactScheduleToken(
           {
             scheduleId: item.id,
-            volunteerId: item.volunteer.id,
+            volunteerId: item.volunteer!.id,
             action: "PORTAL",
           },
           "30d",
         );
+
         const confirmPageUrl = `${appUrl}/r/${confirmToken}`;
+
         const volunteerPortalUrl = `${appUrl}/r/${portalToken}`;
 
         let message = "";
 
-        // MENSAGEM PARA QUEM JÁ CONFIRMOU (Lembrete)
+        // MENSAGEM PARA QUEM JÁ CONFIRMOU
+
         if (item.status === StatusEscala.CONFIRMADO) {
           message =
             `⛪ *${nomeIgreja}*\n` +
-            `Olá, *${item.volunteer.nome}*! 👋\n\n` +
+            `Olá, *${item.volunteer!.nome}*! 👋\n\n` +
             `Passando para lembrar do seu servir amanhã!\n` +
             `📌 *${item.event.titulo}*\n` +
             `📅 *Data/Hora:* ${dataHoraTexto}\n` +
@@ -171,11 +249,12 @@ export async function GET(req: NextRequest) {
             `👀 *Ver todas as suas escalas:* ${volunteerPortalUrl}\n\n` +
             `Contamos com você! Deus abençoe. 🙏`;
         }
-        // MENSAGEM PARA QUEM ESTÁ PENDENTE (Solicitação de resposta)
+
+        // MENSAGEM PARA QUEM ESTÁ PENDENTE
         else {
           message =
             `⛪ *${nomeIgreja}*\n` +
-            `Olá, *${item.volunteer.nome}*! 👋\n\n` +
+            `Olá, *${item.volunteer!.nome}*! 👋\n\n` +
             `Você foi escalado(a) para o culto:\n` +
             `📌 *${item.event.titulo}*\n` +
             `📅 *Data/Hora:* ${dataHoraTexto}\n` +
@@ -186,32 +265,34 @@ export async function GET(req: NextRequest) {
             `Contamos com você! Deus abençoe. 🙏`;
         }
 
-        return sendWhatsAppMessage({
-          phone: item.volunteer.telefone,
+        console.log(
+          `[CRON] Enviando ${index + 1}/${validSchedules.length} para ${item.volunteer!.nome}`,
+        );
+
+        // O próprio helper já possui AbortSignal.timeout(15_000)
+
+        const response = await sendWhatsAppMessage({
+          phone: item.volunteer!.telefone,
           message,
         });
-      }),
+
+        console.log(
+          `[CRON] Solicitação concluída para ${item.volunteer!.nome}`,
+        );
+
+        return response;
+      },
     );
 
-    results.push(...batchResults);
+    const successCount = results.filter(
+      (result) => result.status === "fulfilled",
+    ).length;
 
-    // Aguarda o intervalo antes de enviar o próximo lote (se não for o último)
-    if (i < batches.length - 1) {
-      await delay(DELAY_BETWEEN_BATCHES_MS);
-    }
-  }
+    const failureCount = results.filter(
+      (result) => result.status === "rejected",
+    ).length;
 
-  const successCount = results.filter((r) => r.status === "fulfilled").length;
-  const failureCount = results.filter((r) => r.status === "rejected").length;
-
-  return NextResponse.json({
-    tomorrowStart: tomorrow.toISOString(),
-    tomorrowEnd: endOfTomorrow.toISOString(),
-    totalFound: activeSchedules.length,
-    processedCount: validSchedules.length,
-    successCount,
-    failureCount,
-    failures: results.flatMap((result) =>
+    const failures = results.flatMap((result) =>
       result.status === "rejected"
         ? [
             result.reason instanceof Error
@@ -219,6 +300,37 @@ export async function GET(req: NextRequest) {
               : String(result.reason),
           ]
         : [],
-    ),
-  });
+    );
+
+    console.log(
+      `[CRON] Finalizado. Sucessos: ${successCount}. Falhas: ${failureCount}.`,
+    );
+
+    return NextResponse.json({
+      tomorrowStart: tomorrow.toISOString(),
+      tomorrowEnd: endOfTomorrow.toISOString(),
+
+      totalFound: activeSchedules.length,
+      processedCount: validSchedules.length,
+
+      successCount,
+      failureCount,
+
+      concurrencyLimit: CONCURRENCY_LIMIT,
+
+      failures,
+    });
+  } catch (error) {
+    console.error("[CRON] Erro geral:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erro interno ao processar o Cron.",
+      },
+      { status: 500 },
+    );
+  }
 }
