@@ -74,7 +74,7 @@ export async function getEscalas() {
         dataHora: "asc",
       },
     });
-    // 💡 INJETA O EVENTO EM CADA ESCALA ANTES DO FLATMAP
+
     const escalasComEvento = eventos.flatMap((evento) =>
       evento.escalas.map((escala) => ({
         ...escala,
@@ -93,7 +93,7 @@ export async function getEscalas() {
   }
 }
 
-// 2. Buscar lista de voluntários (para preencher o Select do formulário)
+// 2. Buscar lista de voluntários
 export async function getVoluntarios() {
   const access = await getAccessContext();
 
@@ -121,7 +121,7 @@ export async function getVoluntarios() {
   }
 }
 
-// CRIAR CULTO / EVENTO (Tratando Fuso Horário)
+// CRIAR CULTO / EVENTO
 export async function criarEvento(formData: FormData) {
   const access = await getAccessContext();
 
@@ -130,13 +130,12 @@ export async function criarEvento(formData: FormData) {
   }
 
   const titulo = (formData.get("titulo") as string) || "Culto";
-  const dataHoraInput = formData.get("dataHora") as string; // ex: "2026-09-08T19:41"
+  const dataHoraInput = formData.get("dataHora") as string;
 
   if (!dataHoraInput) {
     return { error: "Data e hora são obrigatórias" };
   }
 
-  // Ajusta a string ISO para o fuso do Brasil (-03:00) antes de converter para Date
   const dataComFuso = new Date(`${dataHoraInput}:00-03:00`);
 
   try {
@@ -229,7 +228,6 @@ export async function criarEscala(formData: FormData) {
       return { error: "Voluntário não pertence a este usuário." };
     }
 
-    // Cria o evento e já associa a primeira pessoa escalada
     const evento = await prisma.event.create({
       data: {
         titulo: tituloEvento,
@@ -338,7 +336,6 @@ export async function responderEscala(
       return { error: "Link de resposta inválido ou expirado." };
     }
 
-    // 1. Valida a escala e o voluntário antes de alterar o status
     const schedule = await prisma.schedule.findUnique({
       where: { id },
       include: {
@@ -360,7 +357,6 @@ export async function responderEscala(
       },
     });
 
-    // 2. Se for RECUSADO, envia notificação no WhatsApp da liderança
     if (novoStatus === "RECUSADO") {
       const adminSettings = await prisma.userSettings.findUnique({
         where: { clerkUserId: schedule.event.clerkUserId },
@@ -406,7 +402,6 @@ export async function responderEscala(
       }
     }
 
-    // 3. Revalida as páginas do Next.js
     revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath(`/confirmar/${id}`);
@@ -417,7 +412,89 @@ export async function responderEscala(
     return { error: "Não foi possível atualizar o status da escala." };
   }
 }
-// 7. Excluir uma pessoa específica da escala (Schedule)
+
+// 7. Disparar notificação do voluntário diretamente via Evolution API
+export async function notificarVoluntarioEscala(
+  scheduleId: string,
+  originUrl: string,
+  nomeIgreja?: string,
+) {
+  const access = await getAccessContext();
+  if (!access) return { error: "Acesso negado." };
+
+  try {
+    const schedule = await prisma.schedule.findFirst({
+      where: {
+        id: scheduleId,
+        event: { clerkUserId: access.ownerClerkUserId },
+        ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+      },
+      include: {
+        volunteer: true,
+        event: true,
+      },
+    });
+
+    if (!schedule || !schedule.volunteer?.telefone) {
+      return {
+        error: "Voluntário ou telefone não encontrado para esta escala.",
+      };
+    }
+
+    const links = await gerarLinksNotificacao(scheduleId);
+    if ("error" in links) return links;
+
+    const linkConfirmacao = `${originUrl}${links.confirmPath}`;
+    const linkAgendaPessoal = schedule.volunteerId
+      ? `${originUrl}${links.portalPath}`
+      : "";
+
+    let dataFormatada = "Data a definir";
+    if (schedule.event.dataHora) {
+      dataFormatada = new Date(schedule.event.dataHora).toLocaleDateString(
+        "pt-BR",
+        {
+          timeZone: "America/Sao_Paulo",
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        },
+      );
+    }
+
+    const funcao = schedule.funcaoEspecífica || "Serviço Geral";
+    const linhaIgreja = nomeIgreja ? `⛪ *${nomeIgreja}*\n` : "";
+    const linhaAgenda = linkAgendaPessoal
+      ? `\n👀 *Ver todas as suas escalas:* ${linkAgendaPessoal}\n`
+      : "";
+
+    const mensagem =
+      `*${linhaIgreja}*\n` +
+      `Olá, *${schedule.volunteer.nome}*! 👋\n\n` +
+      `Você foi escalado(a) para o culto:\n` +
+      `📌 *${schedule.event.titulo}*\n` +
+      `📅 *Data/Hora:* ${dataFormatada}\n` +
+      `🛠️ *Função:* ${funcao}\n\n` +
+      `Por favor, confirme sua presença ou avise se não poderá ir pelo link abaixo:\n` +
+      `👉 ${linkConfirmacao}\n` +
+      `${linhaAgenda}\n` +
+      `Contamos com você! Deus abençoe.`;
+
+    await sendWhatsAppMessage({
+      phone: schedule.volunteer.telefone,
+      message: mensagem,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao notificar voluntário via WhatsApp:", error);
+    return { error: "Falha ao enviar mensagem via WhatsApp." };
+  }
+}
+
+// 8. Excluir uma pessoa específica da escala
 export async function excluirEscala(id: string) {
   const access = await getAccessContext();
   if (!access) {
@@ -446,7 +523,7 @@ export async function excluirEscala(id: string) {
   }
 }
 
-// 8. Excluir o culto/evento completo e todas as pessoas vinculadas a ele
+// 9. Excluir o culto/evento completo e todas as pessoas vinculadas a ele
 export async function excluirEvento(eventId: string) {
   const access = await getAccessContext();
   if (!access) {
@@ -465,7 +542,6 @@ export async function excluirEvento(eventId: string) {
     });
     if (!evento) return { error: "Evento não encontrado." };
 
-    // Garante a remoção das escalas vinculadas primeiro
     await prisma.schedule.deleteMany({
       where: { eventId },
     });
