@@ -388,7 +388,7 @@ export async function responderEscala(
 
         const mensagemLider =
           `⚠️ *ALERTA DE DESISTÊNCIA / IMPREVISTO*\n\n` +
-          `O voluntário *${schedule.volunteer.nome}* informou que *NÃO poderá ir* ao culto.\n\n` +
+          `Olá líder!* ${schedule.volunteer.nome}* informou que *NÃO poderá* cumprir a escala.\n\n` +
           `📌 *Culto:* ${schedule.event.titulo}\n` +
           `📅 *Data/Hora:* ${dataHoraTexto}\n` +
           `🛠️ *Função:* ${funcao}\n` +

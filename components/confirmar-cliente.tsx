@@ -158,7 +158,7 @@ export function ConfirmarCliente({
                 ) : modoEdicao ? (
                   "Avisar Imprevisto"
                 ) : (
-                  "Recusar"
+                  "Não poderei comparecer"
                 )}
               </button>
             </div>

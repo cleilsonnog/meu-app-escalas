@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 
       const alertMessage =
         `⚠️ *ALERTA DE AUSÊNCIA NA ESCALA*\n\n` +
-        `O voluntário *${volunteerName}* informou que *NÃO PODERÁ* comparecer.\n\n` +
+        `Olá líder! *${volunteerName}* informou que *NÃO PODERÁ* cumprir a escala.\n\n` +
         `📌 *Evento:* ${eventTitle}\n` +
         `📅 *Data:* ${dataFormatada}\n` +
         `🛠️ *Função:* ${funcao}\n\n` +
