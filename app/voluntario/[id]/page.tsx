@@ -83,7 +83,7 @@ export default async function VoluntarioAgendaPage({
     id: item.id,
     status: item.status,
     observacao: item.observacao || "",
-    funcao: item.funcaoEspecífica || item.funcaoEspecifica || "Geral",
+    funcao: item.funcaoEspecifica || "Geral",
     eventoTitulo: item.event?.titulo || "Culto",
     dataHora: item.event?.dataHora || new Date(),
     token: generateCompactScheduleToken({

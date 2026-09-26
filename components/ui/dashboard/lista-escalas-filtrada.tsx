@@ -8,7 +8,6 @@ interface ScheduleItem {
   id: string;
   eventId?: string;
   status: "PENDENTE" | "CONFIRMADO" | "RECUSADO";
-  funcaoEspecífica?: string;
   funcaoEspecifica?: string;
   observacao?: string;
   volunteer?: {
@@ -71,7 +70,7 @@ export function ListaEscalasFiltrada({
       eventoFiltro === "TODOS" || tituloEvento === eventoFiltro;
 
     const nomeVoluntario = escala.volunteer?.nome || "";
-    const funcao = escala.funcaoEspecífica || escala.funcaoEspecifica || "";
+    const funcao = escala.funcaoEspecifica || "";
 
     const atendeBusca =
       busca === "" ||

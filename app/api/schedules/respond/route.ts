@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     if (newStatus === StatusEscala.RECUSADO && adminPhone) {
       const volunteerName = schedule.volunteer?.nome || "Voluntário";
       const eventTitle = schedule.event?.titulo || "Culto/Evento";
-      const funcao = schedule.funcaoEspecífica || "Serviço Geral";
+      const funcao = schedule.funcaoEspecifica || "Serviço Geral";
 
       const dataFormatada = schedule.event?.dataHora
         ? new Date(schedule.event.dataHora).toLocaleDateString("pt-BR", {

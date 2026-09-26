@@ -189,7 +189,7 @@ export async function criarEscala(formData: FormData) {
       data: {
         eventId: evento.id,
         volunteerId: volunteerId,
-        funcaoEspecífica: funcaoEspecifica,
+        funcaoEspecifica,
         status: "PENDENTE",
         ministryId: scheduleMinistryId(access, ministryId),
       },
@@ -232,7 +232,7 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
       data: {
         eventId: eventId,
         volunteerId: volunteerId,
-        funcaoEspecífica: funcaoEspecifica,
+        funcaoEspecifica,
         status: "PENDENTE",
         ministryId: scheduleMinistryId(access),
       },
@@ -317,7 +317,7 @@ export async function responderEscala(
         const motivoTexto = observacao?.trim()
           ? `"${observacao.trim()}"`
           : "Nenhum motivo informado";
-        const funcao = schedule.funcaoEspecífica || "Serviço Geral";
+        const funcao = schedule.funcaoEspecifica || "Serviço Geral";
 
         const mensagemLider =
           `⚠️ *ALERTA DE DESISTÊNCIA / IMPREVISTO*\n\n` +
@@ -397,7 +397,7 @@ export async function notificarVoluntarioEscala(
       );
     }
 
-    const funcao = schedule.funcaoEspecífica || "Serviço Geral";
+    const funcao = schedule.funcaoEspecifica || "Serviço Geral";
     const linhaIgreja = nomeIgreja ? `⛪ *${nomeIgreja}*\n` : "";
     const linhaAgenda = linkAgendaPessoal
       ? `\n👀 *Ver todas as suas escalas:* ${linkAgendaPessoal}\n`

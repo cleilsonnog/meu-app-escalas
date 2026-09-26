@@ -100,7 +100,7 @@ model Schedule {
   event       Event        @relation(fields: [eventId], references: [id])
   ministry    Ministry?    @relation(fields: [ministryId], references: [id], onDelete: SetNull)
 
-  funcaoEspecífica String  // ex: Baterista, Câmera 1, Porta Principal
+  funcaoEspecifica String  @map("funcaoEspecífica")
   observacao       String?     // Observações adicionais, se houver
   status      StatusEscala @default(PENDENTE)
 
@@ -108,6 +108,6 @@ model Schedule {
   updatedAt   DateTime     @updatedAt
 
   // Garante que a mesma pessoa não seja escalada duas vezes na mesma função no mesmo culto
-  @@unique([volunteerId, eventId, funcaoEspecífica])
+  @@unique([volunteerId, eventId, funcaoEspecifica])
   @@index([ministryId])
 }

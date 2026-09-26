@@ -35,7 +35,7 @@ export default async function ConfirmarEscalaPage({
       id: true,
       status: true,
       observacao: true,
-      funcaoEspecífica: true,
+      funcaoEspecifica: true,
       event: {
         select: {
           titulo: true,
@@ -92,7 +92,7 @@ export default async function ConfirmarEscalaPage({
 
   // Acesso flexível para evitar erros de acentuação no TypeScript durante o build
   const item = schedule as Record<string, any>;
-  const funcao = item.funcaoEspecífica || item.funcaoEspecifica || "Geral";
+  const funcao = item.funcaoEspecifica || "Geral";
 
   return (
     <ConfirmarCliente

@@ -19,7 +19,6 @@ import {
 interface ScheduleItem {
   id: string;
   status: "PENDENTE" | "CONFIRMADO" | "RECUSADO";
-  funcaoEspecífica?: string;
   funcaoEspecifica?: string;
   volunteerId?: string;
   observacao?: string;
@@ -363,7 +362,7 @@ export function EscalaCard({
         {schedules.map((item) => {
           const nome = item.volunteer?.nome || "Voluntário sem nome";
           const funcao =
-            item.funcaoEspecífica || item.funcaoEspecifica || "Geral";
+            item.funcaoEspecifica || "Geral";
           const isSelected = selectedIds.includes(item.id);
           const isNotified = notifiedIds.includes(item.id);
           const isNotifyingThis = notifyingId === item.id;

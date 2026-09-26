@@ -181,7 +181,7 @@ export async function GET(req: NextRequest) {
       validSchedules,
       CONCURRENCY_LIMIT,
       async (item, index) => {
-        const funcao = item.funcaoEspecífica || "Serviço Geral";
+        const funcao = item.funcaoEspecifica || "Serviço Geral";
 
         const nomeIgreja =
           churchNameMap.get(item.event.clerkUserId || "") || "Sua Igreja";
