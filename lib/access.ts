@@ -104,6 +104,37 @@ export async function getAccessContext(): Promise<AccessContext | null> {
   };
 }
 
+/** Filtro base de tenant — todo model com clerkUserId deve usar isso. */
 export function ownerWhere(access: AccessContext) {
   return { clerkUserId: access.ownerClerkUserId };
+}
+
+/** Filtro de voluntário: restringe por ministério se for líder. */
+export function volunteerWhere(access: AccessContext) {
+  return {
+    clerkUserId: access.ownerClerkUserId,
+    ...(access.role === "LEADER"
+      ? { ministries: { some: { id: access.ministryId } } }
+      : {}),
+  };
+}
+
+/** Filtro de evento: restringe por ministério se for líder. */
+export function eventWhere(access: AccessContext) {
+  return {
+    clerkUserId: access.ownerClerkUserId,
+    ...(access.role === "LEADER"
+      ? { escalas: { some: { ministryId: access.ministryId } } }
+      : {}),
+  };
+}
+
+/** Filtro de escala por ministério (para queries de Schedule). */
+export function scheduleMinistryFilter(access: AccessContext) {
+  return access.role === "LEADER" ? { ministryId: access.ministryId } : {};
+}
+
+/** ministryId para novas escalas. */
+export function scheduleMinistryId(access: AccessContext, fallback?: string | null) {
+  return access.role === "LEADER" ? access.ministryId : fallback ?? null;
 }

@@ -1,35 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ListaEscalasFiltrada } from "./lista-escalas-filtrada";
 import { TabelaVoluntarios } from "./tabela-voluntarios";
-import { RelatoriosVoluntarios } from "../../relatorios-voluntarios"; // 👈 Import da nova aba
+import { RelatoriosVoluntarios } from "../../relatorios-voluntarios";
 import { AdministracaoTab } from "./administracao-tab";
 
+type TabId = "escalas" | "voluntarios" | "relatorios" | "administracao";
+
 interface Props {
+  tab: TabId;
   escalas: any[];
   voluntarios: any[];
   nomeIgreja?: string;
   administracao?: { ministries: any[]; leaders: any[]; schedules: any[] };
 }
 
+const tabStyle = (active: boolean) =>
+  `px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
+    active
+      ? "bg-indigo-600 text-white shadow-sm"
+      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+  }`;
+
 export function DashboardTabs({
+  tab,
   escalas,
   voluntarios,
   nomeIgreja,
   administracao,
 }: Props) {
-  // 1. Atualizado para aceitar a 3ª aba 'relatorios'
-  const [abaAtiva, setAbaAtiva] = useState<
-    "escalas" | "voluntarios" | "relatorios" | "administracao"
-  >("escalas");
-
-  // 👈 CONTA APENAS CULTOS/EVENTOS ÚNICOS
   const totalEventos = new Set(
     escalas.map((e) => e.eventId || e.event?.id || e.id),
   ).size;
 
-  // 2. Cálculos Automáticos para o Relatório baseados nas props recebidas
   const totalEscalas = escalas.length;
   const confirmadas = escalas.filter((e) => e.status === "CONFIRMADO").length;
   const recusadas = escalas.filter((e) => e.status === "RECUSADO").length;
@@ -42,7 +47,6 @@ export function DashboardTabs({
   const taxaRecusa =
     totalEscalas > 0 ? Math.round((recusadas / totalEscalas) * 100) : 0;
 
-  // Mapeamento de sobrecarga de voluntários (escalados 4+ vezes)
   const contagemPorVoluntario: Record<
     string,
     { nome: string; departamento: string; quantidade: number }
@@ -83,60 +87,36 @@ export function DashboardTabs({
 
   return (
     <div className="space-y-6">
-      {/* Seletor de Abas com rolagem horizontal no celular */}
       <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
-        {/* ABA 1: ESCALAS */}
-        <button
-          onClick={() => setAbaAtiva("escalas")}
-          className={`px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
-            abaAtiva === "escalas"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          📋 Painel de Cultos/Eventos ({totalEventos})
-        </button>
+        <Link href="/dashboard" className={tabStyle(tab === "escalas")}>
+          Painel de Cultos/Eventos ({totalEventos})
+        </Link>
 
         {administracao && (
-          <button
-            onClick={() => setAbaAtiva("administracao")}
-            className={`px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
-              abaAtiva === "administracao"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
+          <Link
+            href="/dashboard?tab=administracao"
+            className={tabStyle(tab === "administracao")}
           >
-            ⚙️ Administração
-          </button>
+            Administração
+          </Link>
         )}
 
-        {/* ABA 2: VOLUNTÁRIOS */}
-        <button
-          onClick={() => setAbaAtiva("voluntarios")}
-          className={`px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
-            abaAtiva === "voluntarios"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
+        <Link
+          href="/dashboard?tab=voluntarios"
+          className={tabStyle(tab === "voluntarios")}
         >
-          👥 Voluntários Cadastrado ({voluntarios.length})
-        </button>
+          Voluntários Cadastrados ({voluntarios.length})
+        </Link>
 
-        {/* 👈 ABA 3: RELATÓRIOS & DESEMPENHO */}
-        <button
-          onClick={() => setAbaAtiva("relatorios")}
-          className={`px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap ${
-            abaAtiva === "relatorios"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
+        <Link
+          href="/dashboard?tab=relatorios"
+          className={tabStyle(tab === "relatorios")}
         >
-          📊 Relatórios & Desempenho
-        </button>
+          Relatórios & Desempenho
+        </Link>
       </div>
 
-      {/* Renderização Condicional da Aba Ativa */}
-      {abaAtiva === "escalas" && (
+      {tab === "escalas" && (
         <ListaEscalasFiltrada
           escalas={escalas}
           voluntarios={voluntarios}
@@ -144,19 +124,18 @@ export function DashboardTabs({
         />
       )}
 
-      {abaAtiva === "voluntarios" && (
+      {tab === "voluntarios" && (
         <TabelaVoluntarios voluntarios={voluntarios} />
       )}
 
-      {/* 👈 CONTEÚDO DA 3ª ABA */}
-      {abaAtiva === "relatorios" && (
+      {tab === "relatorios" && (
         <RelatoriosVoluntarios
           resumo={resumoRelatorio}
           sobrecarregados={sobrecarregados}
         />
       )}
 
-      {abaAtiva === "administracao" && administracao && (
+      {tab === "administracao" && administracao && (
         <AdministracaoTab {...administracao} />
       )}
     </div>

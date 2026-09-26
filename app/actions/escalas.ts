@@ -2,12 +2,19 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppMessage, sendWhatsAppFireAndForget } from "@/lib/whatsapp";
 import {
   generateCompactScheduleToken,
   verifyScheduleToken,
 } from "@/lib/tokens";
-import { getAccessContext } from "@/lib/access";
+import {
+  getAccessContext,
+  ownerWhere,
+  volunteerWhere,
+  eventWhere,
+  scheduleMinistryFilter,
+  scheduleMinistryId,
+} from "@/lib/access";
 import {
   criarEventoSchema,
   criarEscalaSchema,
@@ -23,8 +30,8 @@ export async function gerarLinksNotificacao(scheduleId: string) {
   const schedule = await prisma.schedule.findFirst({
     where: {
       id: scheduleId,
-      event: { clerkUserId: access.ownerClerkUserId },
-      ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+      event: ownerWhere(access),
+      ...scheduleMinistryFilter(access),
     },
     select: { id: true, volunteerId: true },
   });
@@ -67,18 +74,12 @@ export async function getEscalas(options?: { fromMonthsAgo?: number }) {
   try {
     const eventos = await prisma.event.findMany({
       where: {
-        clerkUserId: access.ownerClerkUserId,
+        ...eventWhere(access),
         dataHora: { gte: fromDate },
-        ...(access.role === "LEADER"
-          ? { escalas: { some: { ministryId: access.ministryId } } }
-          : {}),
       },
       include: {
         escalas: {
-          where:
-            access.role === "LEADER"
-              ? { ministryId: access.ministryId }
-              : undefined,
+          where: scheduleMinistryFilter(access),
           include: { volunteer: true, ministry: true },
         },
       },
@@ -116,12 +117,7 @@ export async function getVoluntarios(options?: { take?: number }) {
 
   try {
     const voluntarios = await prisma.volunteer.findMany({
-      where: {
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { ministries: { some: { id: access.ministryId } } }
-          : {}),
-      },
+      where: volunteerWhere(access),
       orderBy: {
         nome: "asc",
       },
@@ -174,13 +170,7 @@ export async function criarEscala(formData: FormData) {
 
   try {
     const volunteer = await prisma.volunteer.findFirst({
-      where: {
-        id: volunteerId,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { ministries: { some: { id: access.ministryId } } }
-          : {}),
-      },
+      where: { id: volunteerId, ...volunteerWhere(access) },
       select: { id: true },
     });
     if (!volunteer) {
@@ -191,7 +181,7 @@ export async function criarEscala(formData: FormData) {
       data: {
         titulo: tituloEvento,
         dataHora: new Date(`${dataHora}:00-03:00`),
-        clerkUserId: access.ownerClerkUserId,
+        ...ownerWhere(access),
       },
     });
 
@@ -201,10 +191,7 @@ export async function criarEscala(formData: FormData) {
         volunteerId: volunteerId,
         funcaoEspecífica: funcaoEspecifica,
         status: "PENDENTE",
-        ministryId:
-          access.role === "LEADER"
-            ? access.ministryId
-            : ministryId || null,
+        ministryId: scheduleMinistryId(access, ministryId),
       },
     });
 
@@ -229,23 +216,11 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
   try {
     const [event, volunteer] = await Promise.all([
       prisma.event.findFirst({
-        where: {
-          id: eventId,
-          clerkUserId: access.ownerClerkUserId,
-          ...(access.role === "LEADER"
-            ? { escalas: { some: { ministryId: access.ministryId } } }
-            : {}),
-        },
+        where: { id: eventId, ...eventWhere(access) },
         select: { id: true },
       }),
       prisma.volunteer.findFirst({
-        where: {
-          id: volunteerId,
-          clerkUserId: access.ownerClerkUserId,
-          ...(access.role === "LEADER"
-            ? { ministries: { some: { id: access.ministryId } } }
-            : {}),
-        },
+        where: { id: volunteerId, ...volunteerWhere(access) },
         select: { id: true },
       }),
     ]);
@@ -259,7 +234,7 @@ export async function adicionarVoluntarioAoEvento(formData: FormData) {
         volunteerId: volunteerId,
         funcaoEspecífica: funcaoEspecifica,
         status: "PENDENTE",
-        ministryId: access.role === "LEADER" ? access.ministryId : null,
+        ministryId: scheduleMinistryId(access),
       },
     });
 
@@ -353,7 +328,7 @@ export async function responderEscala(
           `💬 *Motivo:* ${motivoTexto}\n\n` +
           `🔄 Por favor, acesse o painel para escalar um substituto.`;
 
-        await sendWhatsAppMessage({
+        sendWhatsAppFireAndForget({
           phone: telefoneDestino,
           message: mensagemLider,
         });
@@ -384,8 +359,8 @@ export async function notificarVoluntarioEscala(
     const schedule = await prisma.schedule.findFirst({
       where: {
         id: scheduleId,
-        event: { clerkUserId: access.ownerClerkUserId },
-        ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+        event: ownerWhere(access),
+        ...scheduleMinistryFilter(access),
       },
       include: {
         volunteer: true,
@@ -463,8 +438,8 @@ export async function excluirEscala(id: string) {
     const schedule = await prisma.schedule.findFirst({
       where: {
         id,
-        event: { clerkUserId: access.ownerClerkUserId },
-        ...(access.role === "LEADER" ? { ministryId: access.ministryId } : {}),
+        event: ownerWhere(access),
+        ...scheduleMinistryFilter(access),
       },
       select: { id: true },
     });
@@ -489,13 +464,7 @@ export async function excluirEvento(eventId: string) {
   }
   try {
     const evento = await prisma.event.findFirst({
-      where: {
-        id: eventId,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { escalas: { some: { ministryId: access.ministryId } } }
-          : {}),
-      },
+      where: { id: eventId, ...eventWhere(access) },
       select: { id: true },
     });
     if (!evento) return { error: "Evento não encontrado." };

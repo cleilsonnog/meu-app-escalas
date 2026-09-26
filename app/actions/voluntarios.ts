@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getAccessContext } from "@/lib/access";
+import { getAccessContext, volunteerWhere } from "@/lib/access";
 import {
   createVoluntarioSchema,
   updateVoluntarioSchema,
@@ -50,13 +50,7 @@ export async function updateVoluntario(id: string, formData: FormData) {
 
   try {
     const result = await prisma.volunteer.updateMany({
-      where: {
-        id,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { ministries: { some: { id: access.ministryId } } }
-          : {}),
-      },
+      where: { id, ...volunteerWhere(access) },
       data: {
         nome,
         telefone,
@@ -88,23 +82,12 @@ export async function deleteVoluntario(id: string) {
     await prisma.schedule.deleteMany({
       where: {
         volunteerId: id,
-        volunteer: {
-          clerkUserId: access.ownerClerkUserId,
-          ...(access.role === "LEADER"
-            ? { ministries: { some: { id: access.ministryId } } }
-            : {}),
-        },
+        volunteer: volunteerWhere(access),
       },
     });
 
     const result = await prisma.volunteer.deleteMany({
-      where: {
-        id,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { ministries: { some: { id: access.ministryId } } }
-          : {}),
-      },
+      where: { id, ...volunteerWhere(access) },
     });
     if (result.count === 0) {
       return { error: "Voluntário não encontrado." };

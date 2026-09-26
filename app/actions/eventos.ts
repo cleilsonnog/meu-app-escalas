@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getAccessContext } from "@/lib/access";
+import { getAccessContext, eventWhere, scheduleMinistryFilter } from "@/lib/access";
 import { updateEventoSchema, parseFormData } from "@/lib/validations";
 
 export async function getEventos() {
@@ -11,19 +11,11 @@ export async function getEventos() {
 
   try {
     const eventos = await prisma.event.findMany({
-      where: {
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { escalas: { some: { ministryId: access.ministryId } } }
-          : {}),
-      },
+      where: eventWhere(access),
       orderBy: { dataHora: "asc" },
       include: {
         escalas: {
-          where:
-            access.role === "LEADER"
-              ? { ministryId: access.ministryId }
-              : undefined,
+          where: scheduleMinistryFilter(access),
           include: {
             volunteer: true,
           },
@@ -47,13 +39,7 @@ export async function updateEvento(id: string, formData: FormData) {
 
   try {
     const evento = await prisma.event.findFirst({
-      where: {
-        id,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { escalas: { some: { ministryId: access.ministryId } } }
-          : {}),
-      },
+      where: { id, ...eventWhere(access) },
       select: { id: true },
     });
     if (!evento) return { error: "Evento não encontrado." };
@@ -80,13 +66,7 @@ export async function deleteEvento(id: string) {
 
   try {
     const evento = await prisma.event.findFirst({
-      where: {
-        id,
-        clerkUserId: access.ownerClerkUserId,
-        ...(access.role === "LEADER"
-          ? { escalas: { some: { ministryId: access.ministryId } } }
-          : {}),
-      },
+      where: { id, ...eventWhere(access) },
       select: { id: true },
     });
     if (!evento) return { error: "Evento não encontrado." };

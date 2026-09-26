@@ -41,3 +41,17 @@ export async function sendWhatsAppMessage({
 
   return responseData;
 }
+
+/**
+ * Envia mensagem WhatsApp sem bloquear a action que chamou.
+ * Falhas são logadas mas não propagadas — ideal para notificações
+ * secundárias (ex: alerta ao líder quando voluntário recusa).
+ */
+export function sendWhatsAppFireAndForget(params: SendMessageParams) {
+  sendWhatsAppMessage(params).catch((err) => {
+    console.error(
+      `[WhatsApp] Falha silenciosa ao enviar para ${params.phone}:`,
+      err instanceof Error ? err.message : err,
+    );
+  });
+}

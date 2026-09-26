@@ -2,7 +2,7 @@
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
-import { getAccessContext } from "@/lib/access";
+import { getAccessContext, ownerWhere } from "@/lib/access";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import {
@@ -27,7 +27,7 @@ export async function getAdministracao(options?: { fromMonthsAgo?: number }) {
 
   const [ministries, leaders, schedules] = await Promise.all([
     prisma.ministry.findMany({
-      where: { clerkUserId: access.ownerClerkUserId },
+      where: ownerWhere(access),
       include: {
         leaders: true,
         _count: { select: { volunteers: true, escalas: true } },
@@ -92,7 +92,7 @@ export async function atualizarMinisterio(id: string, formData: FormData) {
   const { nome, descricao } = parsed.data;
 
   const result = await prisma.ministry.updateMany({
-    where: { id, clerkUserId: access.ownerClerkUserId },
+    where: { id, ...ownerWhere(access) },
     data: { nome, descricao },
   });
   if (!result.count) return { error: "Ministério não encontrado." };
@@ -105,7 +105,7 @@ export async function excluirMinisterio(id: string) {
   if (!access) return { error: "Acesso negado." };
 
   const ministry = await prisma.ministry.findFirst({
-    where: { id, clerkUserId: access.ownerClerkUserId },
+    where: { id, ...ownerWhere(access) },
     select: { id: true, nome: true },
   });
   if (!ministry) return { error: "Ministério não encontrado." };
@@ -126,7 +126,7 @@ export async function cadastrarLider(formData: FormData) {
   const { nome, email, telefone, ministryId } = parsed.data;
 
   const ministry = await prisma.ministry.findFirst({
-    where: { id: ministryId, clerkUserId: access.ownerClerkUserId },
+    where: { id: ministryId, ...ownerWhere(access) },
     select: { id: true },
   });
   if (!ministry) return { error: "Ministério inválido." };
@@ -189,11 +189,11 @@ export async function atualizarLider(id: string, formData: FormData) {
 
   const [leader, ministry] = await Promise.all([
     prisma.volunteer.findFirst({
-      where: { id, clerkUserId: access.ownerClerkUserId },
+      where: { id, ...ownerWhere(access) },
       select: { id: true },
     }),
     prisma.ministry.findFirst({
-      where: { id: ministryId, clerkUserId: access.ownerClerkUserId },
+      where: { id: ministryId, ...ownerWhere(access) },
       select: { id: true },
     }),
   ]);
@@ -221,7 +221,7 @@ export async function excluirLider(id: string) {
   if (!access) return { error: "Acesso negado." };
 
   const leader = await prisma.volunteer.findFirst({
-    where: { id, clerkUserId: access.ownerClerkUserId },
+    where: { id, ...ownerWhere(access) },
     select: { id: true },
   });
   if (!leader) return { error: "Líder não encontrado." };
