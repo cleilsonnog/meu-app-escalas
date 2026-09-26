@@ -173,10 +173,10 @@ export function EscalaCard({
     const result = await adicionarVoluntarioAoEvento(formData);
 
     setLoading(false);
-    if (result.success) {
-      setOpenModal(false);
+    if ("error" in result && result.error) {
+      alert(result.error);
     } else {
-      alert(result.error || "Erro ao adicionar voluntário.");
+      setOpenModal(false);
     }
   }
 
@@ -187,7 +187,7 @@ export function EscalaCard({
       const res = await excluirEscala(scheduleId);
       setDeletingId(null);
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         alert(res.error);
       } else {
         setSelectedIds((prev) => prev.filter((id) => id !== scheduleId));
