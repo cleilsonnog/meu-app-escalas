@@ -221,7 +221,7 @@ export function EscalaCard({
       {/* CABEÇALHO DO CARD */}
       <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="break-words text-lg font-bold text-slate-900 dark:text-slate-100">
+          <h3 className="wrap-break-word text-lg font-bold text-slate-900 dark:text-slate-100">
             {eventoTitulo}
           </h3>
 

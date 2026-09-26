@@ -1,12 +1,12 @@
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { NovaEscalaModal } from "@/components/ui/dashboard/nova-escala-modal";
-import { NovoVoluntarioModal } from "@/components/ui/dashboard/novo-voluntario-modal";
-import { DashboardTabs } from "@/components/ui/dashboard/dashboard-tabs";
+import { NovaEscalaModal } from "@/components/dashboard/modals/nova-escala-modal";
+import { NovoVoluntarioModal } from "@/components/dashboard/modals/novo-voluntario-modal";
+import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { getEscalas, getVoluntarios } from "@/app/actions/escalas";
 import { getIgrejaName } from "@/app/actions/configuracoes";
-import { TituloIgreja } from "@/components/ui/dashboard/titulo-igreja";
+import { TituloIgreja } from "@/components/dashboard/titulo-igreja";
 import { getAccessContext } from "@/lib/access";
 import { getAdministracao } from "@/app/actions/administracao";
 

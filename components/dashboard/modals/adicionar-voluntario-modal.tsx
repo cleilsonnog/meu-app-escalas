@@ -41,10 +41,10 @@ export function AdicionarVoluntarioModal({
     const result = await adicionarVoluntarioAoEvento(formData);
 
     setLoading(false);
-    if (result.success) {
-      setOpen(false);
+    if ("error" in result && result.error) {
+      alert(result.error);
     } else {
-      alert(result.error || "Erro ao adicionar voluntário");
+      setOpen(false);
     }
   }
 

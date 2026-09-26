@@ -35,10 +35,10 @@ export function TabelaVoluntarios({ voluntarios }: Props) {
     const formData = new FormData(e.currentTarget);
     const res = await updateVoluntario(voluntarioEditando.id, formData);
 
-    if (res.success) {
-      setVoluntarioEditando(null);
+    if ("error" in res && res.error) {
+      alert(res.error);
     } else {
-      alert(res.error || "Erro ao atualizar");
+      setVoluntarioEditando(null);
     }
     setLoading(false);
   }

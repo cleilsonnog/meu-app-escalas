@@ -19,7 +19,7 @@ export function NovoVoluntarioModal() {
     const formData = new FormData(e.currentTarget);
     const result = await createVoluntario(formData);
 
-    if (result?.error) {
+    if ("error" in result && result.error) {
       setErrorMsg(result.error);
       setLoading(false);
     } else {

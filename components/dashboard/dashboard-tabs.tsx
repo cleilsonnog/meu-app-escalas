@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ListaEscalasFiltrada } from "./lista-escalas-filtrada";
 import { TabelaVoluntarios } from "./tabela-voluntarios";
-import { RelatoriosVoluntarios } from "../../relatorios-voluntarios";
+import { RelatoriosVoluntarios } from "../relatorios-voluntarios";
 import { AdministracaoTab } from "./administracao-tab";
 
 type TabId = "escalas" | "voluntarios" | "relatorios" | "administracao";

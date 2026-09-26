@@ -311,7 +311,7 @@ export function AdministracaoTab({
               editingLeader.id,
               new FormData(event.currentTarget),
             );
-            if (result.error) alert(result.error);
+            if ("error" in result && result.error) alert(result.error);
             else setEditingLeader(null);
           }}
           className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/30"

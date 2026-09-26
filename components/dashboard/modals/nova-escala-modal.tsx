@@ -40,10 +40,10 @@ export function NovaEscalaModal({
     const result = await criarEscala(formData);
     setLoading(false);
 
-    if (result.success) {
-      setOpen(false);
-    } else {
+    if ("error" in result && result.error) {
       alert(result.error);
+    } else {
+      setOpen(false);
     }
   }
 
