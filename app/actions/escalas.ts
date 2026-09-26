@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import {
   generateCompactScheduleToken,
@@ -45,18 +44,24 @@ export async function gerarLinksNotificacao(scheduleId: string) {
   };
 }
 
-// 1. Buscar as escalas do próximo culto
-export async function getEscalas() {
+// 1. Buscar escalas com janela de datas (padrão: 3 meses atrás até o futuro)
+export async function getEscalas(options?: { fromMonthsAgo?: number }) {
   const access = await getAccessContext();
 
   if (!access) {
     return { data: [] };
   }
 
+  const monthsAgo = options?.fromMonthsAgo ?? 3;
+  const fromDate = new Date();
+  fromDate.setMonth(fromDate.getMonth() - monthsAgo);
+  fromDate.setHours(0, 0, 0, 0);
+
   try {
     const eventos = await prisma.event.findMany({
       where: {
         clerkUserId: access.ownerClerkUserId,
+        dataHora: { gte: fromDate },
         ...(access.role === "LEADER"
           ? { escalas: { some: { ministryId: access.ministryId } } }
           : {}),
@@ -73,6 +78,7 @@ export async function getEscalas() {
       orderBy: {
         dataHora: "asc",
       },
+      take: 200,
     });
 
     const escalasComEvento = eventos.flatMap((evento) =>
@@ -93,8 +99,8 @@ export async function getEscalas() {
   }
 }
 
-// 2. Buscar lista de voluntários
-export async function getVoluntarios() {
+// 2. Buscar lista de voluntários (com limite de segurança)
+export async function getVoluntarios(options?: { take?: number }) {
   const access = await getAccessContext();
 
   if (!access) {
@@ -112,6 +118,7 @@ export async function getVoluntarios() {
       orderBy: {
         nome: "asc",
       },
+      take: options?.take ?? 500,
     });
 
     return { data: voluntarios };
@@ -152,47 +159,6 @@ export async function criarEvento(formData: FormData) {
   } catch (error) {
     console.error("Erro ao criar evento:", error);
     return { error: "Erro ao criar evento." };
-  }
-}
-
-// 3. Criar novo voluntário
-export async function criarVoluntario(formData: FormData) {
-  const access = await getAccessContext();
-
-  if (!access) {
-    return { error: "Acesso negado. Faça login para cadastrar um voluntário." };
-  }
-
-  const nome = formData.get("nome") as string;
-  const telefone = formData.get("telefone") as string;
-  const email = (formData.get("email") as string)?.trim() || null;
-  const departamento =
-    (formData.get("departamento") as string)?.trim() || "Geral";
-
-  if (!nome?.trim() || !telefone?.trim()) {
-    return { error: "Nome e telefone são obrigatórios." };
-  }
-
-  try {
-    await prisma.volunteer.create({
-      data: {
-        clerkUserId: access.ownerClerkUserId,
-        nome,
-        telefone,
-        email,
-        departamento,
-        ...(access.role === "LEADER" && access.ministryId
-          ? { ministries: { connect: { id: access.ministryId } } }
-          : {}),
-      },
-    });
-
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    return { success: true };
-  } catch (error) {
-    console.error("Erro ao criar voluntário:", error);
-    return { error: "Erro ao salvar voluntário no banco de dados." };
   }
 }
 

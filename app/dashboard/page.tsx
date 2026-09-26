@@ -30,7 +30,7 @@ export default async function DashboardPage() {
 
   const listaEscalas = escalas || [];
   const listaVoluntarios = voluntarios || [];
-  const igrejaName = await getIgrejaName();
+  const igrejaName = nomeIgreja;
   const dadosAdministracao =
     administracao &&
     !administracao.error &&

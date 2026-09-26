@@ -81,7 +81,9 @@ model Event {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  @@index([clerkUserId]) // Melhora a performance ao buscar cultos por usuário
+  @@index([clerkUserId])
+  @@index([clerkUserId, dataHora])
+  @@index([dataHora])
 }
 
 // Tabela de Escalas (A tabela pivô que une Voluntário e Evento)

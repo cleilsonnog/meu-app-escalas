@@ -2,18 +2,27 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+import { getAccessContext } from "@/lib/access";
 
 export async function getEventos() {
-  const { userId } = await auth();
-  if (!userId) return { data: [] };
+  const access = await getAccessContext();
+  if (!access) return { data: [] };
 
   try {
     const eventos = await prisma.event.findMany({
-      where: { clerkUserId: userId },
+      where: {
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { escalas: { some: { ministryId: access.ministryId } } }
+          : {}),
+      },
       orderBy: { dataHora: "asc" },
       include: {
         escalas: {
+          where:
+            access.role === "LEADER"
+              ? { ministryId: access.ministryId }
+              : undefined,
           include: {
             volunteer: true,
           },
@@ -28,21 +37,31 @@ export async function getEventos() {
 }
 
 export async function updateEvento(id: string, formData: FormData) {
-  const { userId } = await auth();
+  const access = await getAccessContext();
+  if (!access) return { error: "Acesso negado." };
+
   const titulo = (formData.get("titulo") as string)?.trim();
   const dataHoraStr = formData.get("dataHora") as string;
-
-  if (!userId) {
-    return { error: "Acesso negado." };
-  }
 
   if (!titulo || !dataHoraStr) {
     return { error: "Título e Data/Hora são obrigatórios." };
   }
 
   try {
-    const result = await prisma.event.updateMany({
-      where: { id, clerkUserId: userId },
+    const evento = await prisma.event.findFirst({
+      where: {
+        id,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { escalas: { some: { ministryId: access.ministryId } } }
+          : {}),
+      },
+      select: { id: true },
+    });
+    if (!evento) return { error: "Evento não encontrado." };
+
+    await prisma.event.update({
+      where: { id: evento.id },
       data: {
         titulo,
         dataHora: new Date(dataHoraStr),
@@ -58,19 +77,29 @@ export async function updateEvento(id: string, formData: FormData) {
 }
 
 export async function deleteEvento(id: string) {
-  const { userId } = await auth();
-  if (!userId) return { error: "Acesso negado." };
+  const access = await getAccessContext();
+  if (!access) return { error: "Acesso negado." };
 
   try {
-    // Remove as escalas ligadas a esse evento primeiro
+    const evento = await prisma.event.findFirst({
+      where: {
+        id,
+        clerkUserId: access.ownerClerkUserId,
+        ...(access.role === "LEADER"
+          ? { escalas: { some: { ministryId: access.ministryId } } }
+          : {}),
+      },
+      select: { id: true },
+    });
+    if (!evento) return { error: "Evento não encontrado." };
+
     await prisma.schedule.deleteMany({
-      where: { eventId: id, event: { clerkUserId: userId } },
+      where: { eventId: evento.id },
     });
 
-    const result = await prisma.event.deleteMany({
-      where: { id, clerkUserId: userId },
+    await prisma.event.delete({
+      where: { id: evento.id },
     });
-    if (result.count === 0) return { error: "Evento não encontrado." };
 
     revalidatePath("/dashboard");
     return { success: true };

@@ -11,9 +11,14 @@ async function requireAdmin() {
   return access?.role === "ADMIN" ? access : null;
 }
 
-export async function getAdministracao() {
+export async function getAdministracao(options?: { fromMonthsAgo?: number }) {
   const access = await requireAdmin();
   if (!access) return { error: "Acesso negado." };
+
+  const monthsAgo = options?.fromMonthsAgo ?? 6;
+  const fromDate = new Date();
+  fromDate.setMonth(fromDate.getMonth() - monthsAgo);
+  fromDate.setHours(0, 0, 0, 0);
 
   const [ministries, leaders, schedules] = await Promise.all([
     prisma.ministry.findMany({
@@ -33,7 +38,12 @@ export async function getAdministracao() {
       orderBy: { nome: "asc" },
     }),
     prisma.schedule.findMany({
-      where: { event: { clerkUserId: access.ownerClerkUserId } },
+      where: {
+        event: {
+          clerkUserId: access.ownerClerkUserId,
+          dataHora: { gte: fromDate },
+        },
+      },
       include: {
         volunteer: { select: { nome: true } },
         event: { select: { titulo: true, dataHora: true } },
@@ -42,6 +52,7 @@ export async function getAdministracao() {
         },
       },
       orderBy: { event: { dataHora: "asc" } },
+      take: 1000,
     }),
   ]);
 
