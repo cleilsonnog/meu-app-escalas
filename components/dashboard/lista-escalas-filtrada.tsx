@@ -121,13 +121,12 @@ export function ListaEscalasFiltrada({
     (a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime(),
   );
 
-  // 4. Identifica o Próximo Culto (evento com data mais próxima do momento atual)
-  const agora = new Date();
+  // 4. Identifica o Próximo Culto (primeiro evento futuro, ou o mais recente se todos passaram)
+  const agora = Date.now();
   const proximoCulto =
     eventosOrdenados.find(
-      (e) =>
-        new Date(e.dataHora).getTime() >= agora.getTime() - 3 * 60 * 60 * 1000, // Margem de 3 horas
-    ) || eventosOrdenados[0];
+      (e) => new Date(e.dataHora).getTime() >= agora,
+    ) || eventosOrdenados[eventosOrdenados.length - 1];
 
   // Verifica se o usuário não está fazendo uma busca/filtro
   const semFiltrosAtivos =
