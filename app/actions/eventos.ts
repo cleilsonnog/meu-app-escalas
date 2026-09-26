@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccessContext } from "@/lib/access";
+import { updateEventoSchema, parseFormData } from "@/lib/validations";
 
 export async function getEventos() {
   const access = await getAccessContext();
@@ -40,12 +41,9 @@ export async function updateEvento(id: string, formData: FormData) {
   const access = await getAccessContext();
   if (!access) return { error: "Acesso negado." };
 
-  const titulo = (formData.get("titulo") as string)?.trim();
-  const dataHoraStr = formData.get("dataHora") as string;
-
-  if (!titulo || !dataHoraStr) {
-    return { error: "Título e Data/Hora são obrigatórios." };
-  }
+  const parsed = parseFormData(updateEventoSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { titulo, dataHora: dataHoraStr } = parsed.data;
 
   try {
     const evento = await prisma.event.findFirst({

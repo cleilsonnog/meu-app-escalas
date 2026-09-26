@@ -8,6 +8,13 @@ import {
   verifyScheduleToken,
 } from "@/lib/tokens";
 import { getAccessContext } from "@/lib/access";
+import {
+  criarEventoSchema,
+  criarEscalaSchema,
+  adicionarVoluntarioSchema,
+  responderEscalaSchema,
+  parseFormData,
+} from "@/lib/validations";
 
 export async function gerarLinksNotificacao(scheduleId: string) {
   const access = await getAccessContext();
@@ -131,19 +138,13 @@ export async function getVoluntarios(options?: { take?: number }) {
 // CRIAR CULTO / EVENTO
 export async function criarEvento(formData: FormData) {
   const access = await getAccessContext();
+  if (!access) return { error: "Não autorizado" };
 
-  if (!access) {
-    return { error: "Não autorizado" };
-  }
+  const parsed = parseFormData(criarEventoSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { titulo, dataHora } = parsed.data;
 
-  const titulo = (formData.get("titulo") as string) || "Culto";
-  const dataHoraInput = formData.get("dataHora") as string;
-
-  if (!dataHoraInput) {
-    return { error: "Data e hora são obrigatórias" };
-  }
-
-  const dataComFuso = new Date(`${dataHoraInput}:00-03:00`);
+  const dataComFuso = new Date(`${dataHora}:00-03:00`);
 
   try {
     await prisma.event.create({
@@ -165,19 +166,11 @@ export async function criarEvento(formData: FormData) {
 // 4. Criar um novo evento com a primeira pessoa escalada
 export async function criarEscala(formData: FormData) {
   const access = await getAccessContext();
+  if (!access) return { error: "Acesso negado. Faça login para criar uma escala." };
 
-  if (!access) {
-    return { error: "Acesso negado. Faça login para criar uma escala." };
-  }
-
-  const tituloEvento = formData.get("tituloEvento") as string;
-  const dataHora = formData.get("dataHora") as string;
-  const volunteerId = formData.get("volunteerId") as string;
-  const funcaoEspecifica = formData.get("funcaoEspecifica") as string;
-
-  if (!tituloEvento || !dataHora || !volunteerId || !funcaoEspecifica) {
-    return { error: "Preencha todos os campos do formulário." };
-  }
+  const parsed = parseFormData(criarEscalaSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { tituloEvento, dataHora, volunteerId, funcaoEspecifica, ministryId } = parsed.data;
 
   try {
     const volunteer = await prisma.volunteer.findFirst({
@@ -211,7 +204,7 @@ export async function criarEscala(formData: FormData) {
         ministryId:
           access.role === "LEADER"
             ? access.ministryId
-            : (formData.get("ministryId") as string) || null,
+            : ministryId || null,
       },
     });
 
@@ -227,17 +220,11 @@ export async function criarEscala(formData: FormData) {
 // 5. Adicionar um novo voluntário a um evento JÁ EXISTENTE
 export async function adicionarVoluntarioAoEvento(formData: FormData) {
   const access = await getAccessContext();
-  const eventId = formData.get("eventId") as string;
-  const volunteerId = formData.get("volunteerId") as string;
-  const funcaoEspecifica = formData.get("funcaoEspecifica") as string;
+  if (!access) return { error: "Acesso negado." };
 
-  if (!access) {
-    return { error: "Acesso negado." };
-  }
-
-  if (!eventId || !volunteerId || !funcaoEspecifica) {
-    return { error: "Selecione o voluntário e preencha a função." };
-  }
+  const parsed = parseFormData(adicionarVoluntarioSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { eventId, volunteerId, funcaoEspecifica } = parsed.data;
 
   try {
     const [event, volunteer] = await Promise.all([
@@ -292,6 +279,11 @@ export async function responderEscala(
   observacao?: string,
   token?: string,
 ) {
+  const parsed = responderEscalaSchema.safeParse({ id, novoStatus, observacao, token });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Dados inválidos." };
+  }
+
   try {
     const tokenPayload = token ? verifyScheduleToken(token) : null;
     if (

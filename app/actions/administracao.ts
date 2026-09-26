@@ -5,6 +5,11 @@ import prisma from "@/lib/prisma";
 import { getAccessContext } from "@/lib/access";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import {
+  ministerioSchema,
+  cadastrarLiderSchema,
+  parseFormData,
+} from "@/lib/validations";
 
 async function requireAdmin() {
   const access = await getAccessContext();
@@ -63,9 +68,9 @@ export async function criarMinisterio(formData: FormData) {
   const access = await requireAdmin();
   if (!access) return { error: "Acesso negado." };
 
-  const nome = String(formData.get("nome") || "").trim();
-  const descricao = String(formData.get("descricao") || "").trim() || null;
-  if (!nome) return { error: "Informe o nome do ministério." };
+  const parsed = parseFormData(ministerioSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, descricao } = parsed.data;
 
   try {
     await prisma.ministry.create({
@@ -82,9 +87,9 @@ export async function atualizarMinisterio(id: string, formData: FormData) {
   const access = await requireAdmin();
   if (!access) return { error: "Acesso negado." };
 
-  const nome = String(formData.get("nome") || "").trim();
-  const descricao = String(formData.get("descricao") || "").trim() || null;
-  if (!nome) return { error: "Informe o nome do ministério." };
+  const parsed = parseFormData(ministerioSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, descricao } = parsed.data;
 
   const result = await prisma.ministry.updateMany({
     where: { id, clerkUserId: access.ownerClerkUserId },
@@ -116,15 +121,9 @@ export async function cadastrarLider(formData: FormData) {
   const access = await requireAdmin();
   if (!access) return { error: "Acesso negado." };
 
-  const nome = String(formData.get("nome") || "").trim();
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
-  const telefone = String(formData.get("telefone") || "").trim();
-  const ministryId = String(formData.get("ministryId") || "");
-  if (!nome || !email || !telefone || !ministryId) {
-    return { error: "Nome, e-mail, telefone e ministério são obrigatórios." };
-  }
+  const parsed = parseFormData(cadastrarLiderSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, email, telefone, ministryId } = parsed.data;
 
   const ministry = await prisma.ministry.findFirst({
     where: { id: ministryId, clerkUserId: access.ownerClerkUserId },
@@ -184,14 +183,9 @@ export async function atualizarLider(id: string, formData: FormData) {
   const access = await requireAdmin();
   if (!access) return { error: "Acesso negado." };
 
-  const nome = String(formData.get("nome") || "").trim();
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
-  const telefone = String(formData.get("telefone") || "").trim();
-  const ministryId = String(formData.get("ministryId") || "");
-  if (!nome || !email || !telefone || !ministryId)
-    return { error: "Preencha todos os campos." };
+  const parsed = parseFormData(cadastrarLiderSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, email, telefone, ministryId } = parsed.data;
 
   const [leader, ministry] = await Promise.all([
     prisma.volunteer.findFirst({

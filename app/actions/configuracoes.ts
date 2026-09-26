@@ -1,9 +1,9 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccessContext } from "@/lib/access";
+import { salvarIgrejaSchema } from "@/lib/validations";
 
 export async function getIgrejaName() {
   try {
@@ -25,6 +25,12 @@ export async function salvarIgrejaName(churchName: string) {
   try {
     const access = await getAccessContext();
     if (!access || access.role !== "ADMIN") return { error: "Não autorizado" };
+
+    const parsed = salvarIgrejaSchema.safeParse({ churchName });
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message || "Dados inválidos." };
+    }
+    churchName = parsed.data.churchName;
 
     await prisma.userSettings.upsert({
       where: { clerkUserId: access.ownerClerkUserId },

@@ -3,21 +3,19 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccessContext } from "@/lib/access";
+import {
+  createVoluntarioSchema,
+  updateVoluntarioSchema,
+  parseFormData,
+} from "@/lib/validations";
 
 export async function createVoluntario(formData: FormData) {
   const access = await getAccessContext();
-  const nome = (formData.get("nome") as string)?.trim();
-  const telefone = (formData.get("telefone") as string)?.trim();
-  const email = (formData.get("email") as string)?.trim() || null;
-  const departamento = (formData.get("departamento") as string)?.trim();
+  if (!access) return { error: "Usuário não autenticado." };
 
-  if (!access) {
-    return { error: "Usuário não autenticado." };
-  }
-
-  if (!nome || !telefone) {
-    return { error: "Nome e Telefone/WhatsApp são obrigatórios." };
-  }
+  const parsed = parseFormData(createVoluntarioSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, telefone, email, departamento } = parsed.data;
 
   try {
     await prisma.volunteer.create({
@@ -25,8 +23,8 @@ export async function createVoluntario(formData: FormData) {
         clerkUserId: access.ownerClerkUserId,
         nome,
         telefone,
-        departamento: departamento || "Geral",
-        email,
+        departamento,
+        email: email || null,
         ...(access.role === "LEADER" && access.ministryId
           ? { ministries: { connect: { id: access.ministryId } } }
           : {}),
@@ -36,7 +34,7 @@ export async function createVoluntario(formData: FormData) {
     revalidatePath("/dashboard");
     revalidatePath("/voluntarios");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao salvar voluntário:", error);
     return { error: "Erro ao salvar voluntário no banco de dados." };
   }
@@ -44,17 +42,11 @@ export async function createVoluntario(formData: FormData) {
 
 export async function updateVoluntario(id: string, formData: FormData) {
   const access = await getAccessContext();
-  const nome = (formData.get("nome") as string)?.trim();
-  const telefone = (formData.get("telefone") as string)?.trim();
-  const departamento = (formData.get("departamento") as string)?.trim();
+  if (!access) return { error: "Usuário não autenticado." };
 
-  if (!nome || !telefone) {
-    return { error: "Nome e Telefone/WhatsApp são obrigatórios." };
-  }
-
-  if (!access) {
-    return { error: "Usuário não autenticado." };
-  }
+  const parsed = parseFormData(updateVoluntarioSchema, formData);
+  if ("error" in parsed) return parsed;
+  const { nome, telefone, departamento } = parsed.data;
 
   try {
     const result = await prisma.volunteer.updateMany({
