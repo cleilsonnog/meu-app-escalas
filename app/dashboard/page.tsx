@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { NovaEscalaModal } from "@/components/dashboard/modals/nova-escala-modal";
 import { NovoVoluntarioModal } from "@/components/dashboard/modals/novo-voluntario-modal";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
@@ -104,6 +105,13 @@ export default async function DashboardPage({
             <NovaEscalaModal voluntarios={listaVoluntarios} />
           </div>
 
+          <Link
+            href="/dashboard/sobre"
+            className="shrink-0 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+            title="Como usar o Escalas"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          </Link>
           <div className="hidden md:block shrink-0 ml-2">
             <UserButton afterSignOutUrl="/" />
           </div>
