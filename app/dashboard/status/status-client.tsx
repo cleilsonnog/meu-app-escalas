@@ -33,7 +33,7 @@ export function StatusClient({ version, routes, dbHealth, dbStats, env, region }
             Status do Sistema
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Monitoramento e documentacao do Escalas SaaS
+            Monitoramento e documentação do Escalas SaaS
           </p>
         </div>
         <Link
@@ -81,7 +81,7 @@ export function StatusClient({ version, routes, dbHealth, dbStats, env, region }
           detail={env}
         />
         <HealthCard
-          label="Regiao"
+          label="Região"
           status={true}
           detail={region}
         />
@@ -95,10 +95,10 @@ export function StatusClient({ version, routes, dbHealth, dbStats, env, region }
       {/* DB Stats */}
       {dbStats && (
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Voluntarios" value={dbStats.volunteers} />
+          <StatCard label="Voluntários" value={dbStats.volunteers} />
           <StatCard label="Eventos" value={dbStats.events} />
           <StatCard label="Escalas" value={dbStats.schedules} />
-          <StatCard label="Ministerios" value={dbStats.ministries} />
+          <StatCard label="Ministérios" value={dbStats.ministries} />
         </div>
       )}
 
@@ -114,7 +114,7 @@ export function StatusClient({ version, routes, dbHealth, dbStats, env, region }
                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
-            {t === "overview" ? "Visao Geral" : t === "routes" ? "Rotas" : "Changelog"}
+            {t === "overview" ? "Visão Geral" : t === "routes" ? "Rotas" : "Changelog"}
           </button>
         ))}
       </div>
@@ -154,14 +154,14 @@ function OverviewTab({ env, region, version }: { env: string; region: string; ve
   const items = [
     { label: "Framework", value: "Next.js 14.2 (App Router)" },
     { label: "Banco de Dados", value: "PostgreSQL (Neon) via Prisma 7" },
-    { label: "Autenticacao", value: "Clerk" },
+    { label: "Autenticação", value: "Clerk" },
     { label: "Mensageria", value: "Evolution API (WhatsApp)" },
     { label: "Deploy", value: "Vercel" },
     { label: "Testes", value: "Vitest" },
-    { label: "Validacao", value: "Zod" },
-    { label: "Versao", value: `v${version}` },
+    { label: "Validação", value: "Zod" },
+    { label: "Versão", value: `v${version}` },
     { label: "Ambiente", value: env },
-    { label: "Regiao", value: region },
+    { label: "Região", value: region },
   ];
 
   return (
@@ -183,7 +183,7 @@ function RoutesTab({ routes }: { routes: Route[] }) {
   return (
     <div className="p-6">
       <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
-        Paginas ({pages.length})
+        Páginas ({pages.length})
       </h3>
       <div className="mb-6 space-y-2">
         {pages.map((r) => (
@@ -229,20 +229,20 @@ function ChangelogTab() {
           title="Adicionado"
           color="green"
           items={[
-            "Validacao com Zod em todas as server actions",
-            "Testes unitarios com Vitest (29 testes)",
+            "Validação com Zod em todas as server actions",
+            "Testes unitários com Vitest (29 testes)",
             "Helpers centralizados de tenant filtering",
-            "Notificacoes WhatsApp nao-bloqueantes (fire-and-forget)",
-            "Pagina de status do sistema com versionamento semantico",
+            "Notificações WhatsApp não-bloqueantes (fire-and-forget)",
+            "Página de status do sistema com versionamento semântico",
           ]}
         />
         <ChangelogSection
           title="Corrigido"
           color="red"
           items={[
-            "Isolamento multi-tenant no eventos.ts",
+            "Isolamento multi-tenant no eventos",
             "Queries sem limite retornando todos os registros",
-            "Proximo culto em destaque mostrando evento antigo",
+            "Próximo culto em destaque mostrando evento antigo",
             "Erros de TypeScript em todos os componentes",
             "Campo funcaoEspecifica com acento causando problemas",
           ]}
@@ -251,9 +251,9 @@ function ChangelogTab() {
           title="Alterado"
           color="amber"
           items={[
-            "Reorganizacao de componentes dashboard com subpasta modals/",
+            "Reorganização de componentes dashboard com subpasta modals/",
             "Dashboard carrega dados condicionalmente por tab",
-            "Versao bumped de 0.1.0 para 1.0.0",
+            "Versão atualizada de 0.1.0 para 1.0.0",
           ]}
         />
       </div>

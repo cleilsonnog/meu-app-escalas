@@ -10,10 +10,10 @@ interface Props {
 type Tab = "inicio" | "voluntarios" | "escalas" | "notificacoes" | "administracao";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "inicio", label: "Inicio" },
-  { id: "voluntarios", label: "Voluntarios" },
+  { id: "inicio", label: "Início" },
+  { id: "voluntarios", label: "Voluntários" },
   { id: "escalas", label: "Escalas" },
-  { id: "notificacoes", label: "Notificacoes" },
+  { id: "notificacoes", label: "Notificações" },
   { id: "administracao", label: "Admin" },
 ];
 
@@ -29,7 +29,7 @@ export function SobreClient({ version }: Props) {
             Como usar o Escalas
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Guia rapido para gerenciar suas escalas de voluntarios
+            Guia rápido para gerenciar suas escalas de voluntários
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export function SobreClient({ version }: Props) {
       {/* Suporte */}
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-900">
         <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-          Ficou com alguma duvida ou precisa de ajuda?
+          Ficou com alguma dúvida ou precisa de ajuda?
         </p>
         <a
           href="https://wa.me/5522988516223?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Escalas"
@@ -138,32 +138,32 @@ function InicioTab() {
     <div className="p-6">
       <SectionTitle>Bem-vindo ao Escalas</SectionTitle>
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        O Escalas ajuda voce a organizar os voluntarios da sua igreja em cultos e eventos.
-        Com ele voce cadastra voluntarios, cria escalas e notifica todos pelo WhatsApp de forma automatica.
+        O Escalas ajuda você a organizar os voluntários da sua igreja em cultos e eventos.
+        Com ele você cadastra voluntários, cria escalas e notifica todos pelo WhatsApp de forma automática.
       </p>
 
-      <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Fluxo basico de uso</h3>
+      <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Fluxo básico de uso</h3>
       <div className="space-y-1">
-        <Step number={1} title="Cadastre seus voluntarios">
-          Adicione o nome e telefone de cada voluntario na aba <strong>Voluntarios</strong>.
+        <Step number={1} title="Cadastre seus voluntários">
+          Adicione o nome e telefone de cada voluntário na aba <strong>Voluntários</strong>.
         </Step>
         <Step number={2} title="Crie um culto/evento">
-          Na aba <strong>Escalas</strong>, clique em <strong>Nova Escala</strong> para criar um culto com data e horario.
+          Na aba <strong>Escalas</strong>, clique em <strong>Nova Escala</strong> para criar um culto com data e horário.
         </Step>
-        <Step number={3} title="Escale os voluntarios">
-          Adicione voluntarios ao culto com suas respectivas funcoes.
+        <Step number={3} title="Escale os voluntários">
+          Adicione voluntários ao culto com suas respectivas funções.
         </Step>
         <Step number={4} title="Notifique pelo WhatsApp">
-          Envie a notificacao para cada voluntario. Ele recebe um link para confirmar ou informar que nao podera ir.
+          Envie a notificação para cada voluntário. Ele recebe um link para confirmar ou informar que não poderá ir.
         </Step>
         <Step number={5} title="Acompanhe as respostas">
-          Veja em tempo real quem confirmou, recusou ou ainda esta pendente.
+          Veja em tempo real quem confirmou, quem não poderá ir ou ainda está pendente.
         </Step>
       </div>
 
       <Tip>
-        O painel principal tem 4 abas: <strong>Escalas</strong>, <strong>Voluntarios</strong>,{" "}
-        <strong>Relatorios</strong> e <strong>Administracao</strong>. Use o menu no topo para navegar.
+        O painel principal tem 4 abas: <strong>Escalas</strong>, <strong>Voluntários</strong>,{" "}
+        <strong>Relatórios</strong> e <strong>Administração</strong>. Use o menu no topo para navegar.
       </Tip>
     </div>
   );
@@ -172,14 +172,14 @@ function InicioTab() {
 function VoluntariosTab() {
   return (
     <div className="p-6">
-      <SectionTitle>Gerenciando Voluntarios</SectionTitle>
+      <SectionTitle>Gerenciando Voluntários</SectionTitle>
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        Voluntarios sao as pessoas que servem nos cultos e eventos da sua igreja.
+        Voluntários são as pessoas que servem nos cultos e eventos da sua igreja.
       </p>
 
       <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Como cadastrar</h3>
-      <Step number={1} title="Clique em 'Novo Voluntario'">
-        O botao fica no topo do painel, ao lado de &quot;Nova Escala&quot;.
+      <Step number={1} title="Clique em 'Novo Voluntário'">
+        O botão fica no topo do painel, ao lado de &quot;Nova Escala&quot;.
       </Step>
       <Step number={2} title="Preencha os dados">
         Informe nome, telefone (com DDD) e opcionalmente o email.
@@ -195,12 +195,12 @@ function VoluntariosTab() {
 
       <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Editando e removendo</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Na aba <strong>Voluntarios</strong>, clique no icone de edicao ao lado do nome para alterar os dados.
-        Para remover, use o botao de exclusao. Voluntarios com escalas futuras nao podem ser removidos.
+        Na aba <strong>Voluntários</strong>, clique no ícone de edição ao lado do nome para alterar os dados.
+        Para remover, use o botão de exclusão. Voluntários com escalas futuras não podem ser removidos.
       </p>
 
       <Tip>
-        O telefone deve conter DDD + numero, sem espacos ou tracos. Exemplo: <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">11999887766</code>
+        O telefone deve conter DDD + número, sem espaços ou traços. Exemplo: <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">11999887766</code>
       </Tip>
     </div>
   );
@@ -211,41 +211,41 @@ function EscalasTab() {
     <div className="p-6">
       <SectionTitle>Criando Escalas</SectionTitle>
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        Uma escala vincula voluntarios a um culto ou evento, com funcao especifica e status de confirmacao.
+        Uma escala vincula voluntários a um culto ou evento, com função específica e status de confirmação.
       </p>
 
       <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Criando um culto com escala</h3>
       <Step number={1} title="Clique em 'Nova Escala'">
-        O botao fica no topo do painel.
+        O botão fica no topo do painel.
       </Step>
-      <Step number={2} title="Preencha o titulo do culto">
+      <Step number={2} title="Preencha o título do culto">
         Use um nome claro para identificar o evento.
       </Step>
-      <Step number={3} title="Escolha data e horario">
+      <Step number={3} title="Escolha data e horário">
         Selecione quando o culto vai acontecer.
       </Step>
-      <Step number={4} title="Selecione o primeiro voluntario e sua funcao">
-        Voce pode adicionar mais voluntarios depois.
+      <Step number={4} title="Selecione o primeiro voluntário e sua função">
+        Você pode adicionar mais voluntários depois.
       </Step>
 
       <ExampleBox title="Exemplo de preenchimento">
         <div className="space-y-1">
-          <p><strong>Titulo:</strong> Culto de Domingo</p>
-          <p><strong>Data/Hora:</strong> 29/09/2026 as 19:00</p>
-          <p><strong>Voluntario:</strong> Joao Santos</p>
-          <p><strong>Funcao:</strong> Guitarra</p>
+          <p><strong>Título:</strong> Culto de Domingo</p>
+          <p><strong>Data/Hora:</strong> 29/09/2026 às 19:00</p>
+          <p><strong>Voluntário:</strong> João Santos</p>
+          <p><strong>Função:</strong> Guitarra</p>
         </div>
       </ExampleBox>
 
-      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Adicionando mais voluntarios</h3>
+      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Adicionando mais voluntários</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Dentro do card do culto, clique no botao <strong>+</strong> para adicionar outro voluntario.
-        Cada um pode ter uma funcao diferente.
+        Dentro do card do culto, clique no botão <strong>+</strong> para adicionar outro voluntário.
+        Cada um pode ter uma função diferente.
       </p>
 
-      <ExampleBox title="Exemplo de funcoes">
+      <ExampleBox title="Exemplo de funções">
         <div className="flex flex-wrap gap-2">
-          {["Guitarra", "Bateria", "Teclado", "Baixo", "Vocal", "Sonoplastia", "Projecao", "Recepcao", "Diacono", "Intercessao"].map((f) => (
+          {["Guitarra", "Bateria", "Teclado", "Baixo", "Vocal", "Sonoplastia", "Projeção", "Recepção", "Diácono", "Intercessão"].map((f) => (
             <span key={f} className="rounded-full bg-indigo-200 px-2.5 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200">
               {f}
             </span>
@@ -257,20 +257,20 @@ function EscalasTab() {
       <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
         <div className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 rounded-full bg-yellow-400" />
-          <strong>Pendente</strong> — voluntario ainda nao respondeu
+          <strong>Pendente</strong> — voluntário ainda não respondeu
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
-          <strong>Confirmado</strong> — voluntario confirmou presenca
+          <strong>Confirmado</strong> — voluntário confirmou presença
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
-          <strong>Nao poderei</strong> — voluntario informou que nao podera comparecer
+          <strong>Não poderei</strong> — voluntário informou que não poderá comparecer
         </div>
       </div>
 
       <Tip>
-        Use os filtros de status e busca na aba Escalas para encontrar rapidamente um culto ou voluntario.
+        Use os filtros de status e busca na aba Escalas para encontrar rapidamente um culto ou voluntário.
       </Tip>
     </div>
   );
@@ -279,49 +279,49 @@ function EscalasTab() {
 function NotificacoesTab() {
   return (
     <div className="p-6">
-      <SectionTitle>Notificacoes via WhatsApp</SectionTitle>
+      <SectionTitle>Notificações via WhatsApp</SectionTitle>
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        O sistema envia mensagens automaticas via WhatsApp para os voluntarios escalados.
+        O sistema envia mensagens automáticas via WhatsApp para os voluntários escalados.
       </p>
 
       <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Como funciona</h3>
-      <Step number={1} title="Escale o voluntario">
-        Adicione ele ao culto com a funcao desejada.
+      <Step number={1} title="Escale o voluntário">
+        Adicione ele ao culto com a função desejada.
       </Step>
-      <Step number={2} title="Clique no icone de envio">
-        No card do culto, clique no icone de envio ao lado do nome do voluntario.
+      <Step number={2} title="Clique no ícone de envio">
+        No card do culto, clique no ícone de envio ao lado do nome do voluntário.
       </Step>
-      <Step number={3} title="Voluntario recebe a mensagem">
-        Ele recebe no WhatsApp os detalhes do culto e um link para confirmar ou avisar que nao podera ir.
+      <Step number={3} title="Voluntário recebe a mensagem">
+        Ele recebe no WhatsApp os detalhes do culto e um link para confirmar ou avisar que não poderá ir.
       </Step>
 
-      <ExampleBox title="Exemplo de mensagem que o voluntario recebe">
+      <ExampleBox title="Exemplo de mensagem que o voluntário recebe">
         <div className="whitespace-pre-line font-mono text-xs leading-relaxed">
 {`Igreja Vida Nova
 
-Ola, Maria Silva!
+Olá, Maria Silva!
 
-Voce foi escalado(a) para o culto:
+Você foi escalado(a) para o culto:
 Culto de Domingo
 Data/Hora: dom., 29/09, 19:00
-Funcao: Guitarra
+Função: Guitarra
 
-Por favor, confirme sua presenca ou avise
-se nao podera ir pelo link abaixo:
-[link de confirmacao]
+Por favor, confirme sua presença ou avise
+se não poderá ir pelo link abaixo:
+[link de confirmação]
 
-Contamos com voce! Deus abencoe.`}
+Contamos com você! Deus abençoe.`}
         </div>
       </ExampleBox>
 
-      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Quando alguem nao pode ir</h3>
+      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Quando alguém não pode ir</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Se um voluntario informar que nao podera comparecer, voce (ou o lider do ministerio) recebe
-        automaticamente um aviso no WhatsApp com o nome, o motivo e qual funcao precisa de substituto.
+        Se um voluntário informar que não poderá comparecer, você (ou o líder do ministério) recebe
+        automaticamente um aviso no WhatsApp com o nome, o motivo e qual função precisa de substituto.
       </p>
 
       <Tip>
-        Voce pode enviar a notificacao para todos os voluntarios do culto de uma vez usando o botao
+        Você pode enviar a notificação para todos os voluntários do culto de uma vez usando o botão
         de envio em massa no card do culto.
       </Tip>
     </div>
@@ -331,19 +331,19 @@ Contamos com voce! Deus abencoe.`}
 function AdministracaoTab() {
   return (
     <div className="p-6">
-      <SectionTitle>Administracao</SectionTitle>
+      <SectionTitle>Administração</SectionTitle>
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        Na aba Administracao voce configura ministerios e cadastra lideres que terao acesso ao painel.
+        Na aba Administração você configura ministérios e cadastra líderes que terão acesso ao painel.
       </p>
 
-      <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Ministerios</h3>
+      <h3 className="mb-4 font-medium text-slate-900 dark:text-slate-100">Ministérios</h3>
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Ministerios sao os departamentos da igreja. Cada ministerio pode ter seus proprios voluntarios e escalas.
+        Ministérios são os departamentos da igreja. Cada ministério pode ter seus próprios voluntários e escalas.
       </p>
 
-      <ExampleBox title="Exemplos de ministerios">
+      <ExampleBox title="Exemplos de ministérios">
         <div className="flex flex-wrap gap-2">
-          {["Louvor", "Infantil", "Midia", "Recepcao", "Intercessao", "Diaconia", "Jovens"].map((m) => (
+          {["Louvor", "Infantil", "Mídia", "Recepção", "Intercessão", "Diaconia", "Jovens"].map((m) => (
             <span key={m} className="rounded-full bg-indigo-200 px-2.5 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200">
               {m}
             </span>
@@ -351,33 +351,33 @@ function AdministracaoTab() {
         </div>
       </ExampleBox>
 
-      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Lideres</h3>
-      <Step number={1} title="Cadastre o lider">
-        Informe nome, email, telefone e qual ministerio ele lidera.
+      <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Líderes</h3>
+      <Step number={1} title="Cadastre o líder">
+        Informe nome, email, telefone e qual ministério ele lidera.
       </Step>
-      <Step number={2} title="Lider recebe acesso">
-        Ao fazer login com o email cadastrado, o lider tera acesso apenas
-        aos voluntarios e escalas do ministerio dele.
+      <Step number={2} title="Líder recebe acesso">
+        Ao fazer login com o email cadastrado, o líder terá acesso apenas
+        aos voluntários e escalas do ministério dele.
       </Step>
 
-      <ExampleBox title="Exemplo de cadastro de lider">
+      <ExampleBox title="Exemplo de cadastro de líder">
         <div className="space-y-1">
           <p><strong>Nome:</strong> Pedro Oliveira</p>
           <p><strong>Email:</strong> pedro@email.com</p>
           <p><strong>Telefone:</strong> 11988776655</p>
-          <p><strong>Ministerio:</strong> Louvor</p>
+          <p><strong>Ministério:</strong> Louvor</p>
         </div>
       </ExampleBox>
 
       <h3 className="mb-4 mt-6 font-medium text-slate-900 dark:text-slate-100">Nome da Igreja</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        No topo do painel, clique no nome da igreja para edita-lo. Esse nome aparece nas mensagens
-        enviadas aos voluntarios via WhatsApp.
+        No topo do painel, clique no nome da igreja para editá-lo. Esse nome aparece nas mensagens
+        enviadas aos voluntários via WhatsApp.
       </p>
 
       <Tip>
-        O lider so ve os voluntarios e escalas do ministerio dele. Voce, como administrador,
-        ve tudo de todos os ministerios.
+        O líder só vê os voluntários e escalas do ministério dele. Você, como administrador,
+        vê tudo de todos os ministérios.
       </Tip>
     </div>
   );
